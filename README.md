@@ -1,7 +1,5 @@
 # DeepLPF: Deep Local Parametric Filters for Image Enhancement (Paper accepted to CVPR 2020)
 
-**Code will appear [here](https://github.com/huawei-noah) after the CVPR 2020 proceeedings.**
-
 [Sean Moran](http://www.seanjmoran.com), Pierre Marza, Steven McDonagh, [Sarah Parisot](https://parisots.github.io/), [Greg Slabaugh](http://gregslabaugh.net/)
 
 Huawei Noah's Ark Lab
@@ -13,6 +11,10 @@ Huawei Noah's Ark Lab
 </p>
 Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhancement. Here you will find the code, pre-trained models, information of the datasets, and information on the training procedure for our models. Please raise a Github issue if you need assistance of have any questions on the research. 
 <p></p>
+
+### Code
+
+**Code will appear [here](https://github.com/huawei-noah) after the CVPR 2020 proceeedings.**
 
 ### Bibtex
 
