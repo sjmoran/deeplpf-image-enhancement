@@ -14,7 +14,7 @@ Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhanc
 
 ### Code
 
-**Code will appear [here](https://github.com/huawei-noah) after the CVPR 2020 proceeedings.**
+**Code will appear [here](https://github.com/huawei-noah) after the CVPR 2020 proceeedings have been published.**
 
 ### Bibtex
 
