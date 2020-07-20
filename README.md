@@ -6,6 +6,7 @@ Huawei Noah's Ark Lab
 
 ### [[Paper]](https://arxiv.org/abs/2003.13985) 
 ### [[Video]](https://www.youtube.com/watch?v=Sxach3FM6FY) 
+### [[Supplementary]](http://www.seanjmoran.com/pdfs/DeepLPF_supplementary.pdf) 
 
 <p align="center">
 <img src="./images/teaser.png" width="80%"/>
