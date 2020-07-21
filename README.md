@@ -21,13 +21,12 @@ Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhanc
 ### Bibtex
 
 ```
-@misc{moran2020deeplpf,
-    title={DeepLPF: Deep Local Parametric Filters for Image Enhancement},
-    author={Sean Moran and Pierre Marza and Steven McDonagh and Sarah Parisot and Gregory Slabaugh},
-    year={2020},
-    eprint={2003.13985},
-    archivePrefix={arXiv},
-    primaryClass={cs.CV}
+@InProceedings{Moran_2020_CVPR,
+author = {Moran, Sean and Marza, Pierre and McDonagh, Steven and Parisot, Sarah and Slabaugh, Gregory},
+title = {DeepLPF: Deep Local Parametric Filters for Image Enhancement},
+booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+month = {June},
+year = {2020}
 }
 ```
 
