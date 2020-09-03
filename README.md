@@ -18,6 +18,10 @@ Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhanc
 
 **17th July 2020: Code is located [here](https://github.com/huawei-noah/noah-research/tree/master/DeepLPF).**
 
+### License
+
+MIT license
+
 ### Bibtex
 
 ```
