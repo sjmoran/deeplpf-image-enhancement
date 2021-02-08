@@ -14,7 +14,7 @@ Authors: Sean Moran (sean.j.moran@gmail.com),
 import matplotlib
 matplotlib.use('agg')
 import os
-from skimage.measure import compare_ssim as ssim
+from skimage.metrics import structural_similarity as ssim
 import os.path
 import torch.nn.functional as F
 from skimage import io, color
@@ -48,8 +48,9 @@ import unet
 from abc import ABCMeta, abstractmethod
 import imageio
 import cv2
+import sys
 from skimage.transform import resize
-np.set_printoptions(threshold=np.nan)
+np.set_printoptions(threshold=sys.maxsize)
 
 
 class ImageProcessing(object):

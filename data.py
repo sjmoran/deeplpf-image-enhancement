@@ -12,7 +12,7 @@ Authors: Sean Moran (sean.j.moran@gmail.com),
 
 '''
 import os
-from skimage.measure import compare_ssim as ssim
+from skimage.metrics import structural_similarity as ssim
 import os.path
 import torch.nn.functional as F
 from skimage import io, color
@@ -50,8 +50,9 @@ import imageio
 import cv2
 from skimage.transform import resize
 import matplotlib
+import sys
 matplotlib.use('agg')
-np.set_printoptions(threshold=np.nan)
+np.set_printoptions(threshold=sys.maxsize)
 
 
 class Dataset(torch.utils.data.Dataset):
@@ -191,7 +192,7 @@ class Adobe5kDataLoader(DataLoader):
 
             for file in files:
 
-                img_id = file.split(".")[0]
+                img_id = file.split("-")[0]
 
                 is_id_in_list = False
                 for img_id_test in image_ids_list:

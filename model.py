@@ -26,6 +26,7 @@ import time
 import torch
 import torch.nn as nn
 import traceback
+import sys
 import torchvision.transforms as transforms
 from torch.autograd import Variable
 from torchvision.datasets import ImageFolder
@@ -51,11 +52,11 @@ from skimage import io, color
 from math import exp
 import torch.nn.functional as F
 import os.path
-from skimage.measure import compare_ssim as ssim
+from skimage.metrics import structural_similarity as ssim
 import glob
 import os
 print(torch.__version__)
-np.set_printoptions(threshold=np.nan)
+np.set_printoptions(threshold=sys.maxsize)
 
 
 class DeepLPFLoss(nn.Module):
@@ -150,6 +151,7 @@ class DeepLPFLoss(nn.Module):
 
         return ssim_map.mean(), cs
 
+
     def compute_msssim(self, img1, img2):
         """Computes the multi scale structural similarity index between two images. This function is differentiable.
         Code adapted from: https://github.com/Po-Hsun-Su/pytorch-ssim/blob/master/pytorch_ssim/__init__.py
@@ -160,46 +162,42 @@ class DeepLPFLoss(nn.Module):
         :rtype: float
 
         """
-        if img1.size() != img2.size():
-            raise RuntimeError('Input images must have the same shape (%s vs. %s).' % (
-                img1.size(), img2.size()))
-        if len(img1.size()) != 4:
-            raise RuntimeError(
-                'Input images must have four dimensions, not %d' % len(img1.size()))
+        if img1.shape != img2.shape:
+            raise RuntimeError('Input images must have the same shape (%s vs. %s).',
+                       img1.shape, img2.shape)
+        if img1.ndim != 4:
+            raise RuntimeError('Input images must have four dimensions, not %d',
+                       img1.ndim)
 
-        if type(img1) is not Variable or type(img2) is not Variable:
-            raise RuntimeError(
-                'Input images must be Variables, not %s' % img1.__class__.__name__)
-
-        weights = Variable(torch.FloatTensor(
-            [0.0448, 0.2856, 0.3001, 0.2363, 0.1333]))
-        # weights = Variable(torch.FloatTensor([1.0, 1.0, 1.0, 1.0, 1.0]))
-        if img1.is_cuda:
-            weights = weights.cuda(img1.get_device())
-
+        device = img1.device
+        weights = torch.FloatTensor([0.0448, 0.2856, 0.3001, 0.2363, 0.1333]).to(device)
         levels = weights.size()[0]
-        mssim = []
+        ssims = []
         mcs = []
         for _ in range(levels):
-            sim, cs = self.compute_ssim(img1, img2)
-            mssim.append(sim)
+            ssim, cs = self.compute_ssim(img1, img2)
+
+            # Relu normalize (not compliant with original definition)
+            ssims.append(ssim)
             mcs.append(cs)
 
             img1 = F.avg_pool2d(img1, (2, 2))
             img2 = F.avg_pool2d(img2, (2, 2))
 
-        img1 = img1.contiguous()
-        img2 = img2.contiguous()
+        ssims = torch.stack(ssims)
+        mcs = torch.stack(mcs)
 
-        mssim = torch.cat(mssim)
-        mcs = torch.cat(mcs)
-
-        mssim = (mssim + 1) / 2
+        # Simple normalize (not compliant with original definition)
+        # TODO: remove support for normalize == True (kept for backward support)
+        ssims = (ssims + 1) / 2
         mcs = (mcs + 1) / 2
 
-        prod = (torch.prod(mcs[0:levels - 1] ** weights[0:levels - 1])
-                * (mssim[levels - 1] ** weights[levels - 1]))
-        return prod
+        pow1 = mcs ** weights
+        pow2 = ssims ** weights
+
+        # From Matlab implementation https://ece.uwaterloo.ca/~z70wang/research/iwssim/
+        output = torch.prod(pow1[:-1] * pow2[-1])
+        return output
 
     def forward(self, predicted_img_batch, target_img_batch):
         """Forward function for the DeepLPF loss
@@ -294,7 +292,7 @@ class CubicFilter(nn.Module):
         self.cubic_layer8 = GlobalPoolingBlock(2)
         self.fc_cubic = torch.nn.Linear(
             num_out_channels, 60)  # cubic
-        self.upsample = torch.nn.Upsample(size=(300, 300), mode='bilinear')
+        self.upsample = torch.nn.Upsample(size=(300, 300), mode='bilinear',align_corners=True)
         self.dropout = nn.Dropout(0.5)
 
     def get_cubic_mask(self, feat, img):
@@ -403,7 +401,7 @@ class GraduatedFilter(nn.Module):
         self.graduated_layer8 = GlobalPoolingBlock(2)
         self.fc_graduated = torch.nn.Linear(
             num_out_channels, 24)
-        self.upsample = torch.nn.Upsample(size=(300, 300), mode='bilinear')
+        self.upsample = torch.nn.Upsample(size=(300, 300), mode='bilinear',align_corners=True)
         self.dropout = nn.Dropout(0.5)
         self.bin_layer = BinaryLayer()
 
@@ -521,13 +519,13 @@ class GraduatedFilter(nn.Module):
         G[0, 7] = self.tanh01(G[0, 7]) + 1e-10
         G[0, 13] = self.tanh01(G[0, 13]) + 1e-10
 
-        G[0, 2] = torch.clamp(self.tanh01(G[0, 2]), G[0, 1].data[0], 1.0)
-        G[0, 8] = torch.clamp(self.tanh01(G[0, 8]), G[0, 7].data[0], 1.0)
-        G[0, 14] = torch.clamp(self.tanh01(G[0, 14]), G[0, 13].data[0], 1.0)
+        G[0, 2] = torch.clamp(self.tanh01(G[0, 2]), G[0, 1].data, 1.0)
+        G[0, 8] = torch.clamp(self.tanh01(G[0, 8]), G[0, 7].data, 1.0)
+        G[0, 14] = torch.clamp(self.tanh01(G[0, 14]), G[0, 13].data, 1.0)
 
-        G[0, 18] = torch.clamp(self.tanh01(G[0, 18]), 0, G[0, 1].data[0])
-        G[0, 19] = torch.clamp(self.tanh01(G[0, 19]), 0, G[0, 7].data[0])
-        G[0, 20] = torch.clamp(self.tanh01(G[0, 20]), 0, G[0, 13].data[0])
+        G[0, 18] = torch.clamp(self.tanh01(G[0, 18]), 0, G[0, 1].data)
+        G[0, 19] = torch.clamp(self.tanh01(G[0, 19]), 0, G[0, 7].data)
+        G[0, 20] = torch.clamp(self.tanh01(G[0, 20]), 0, G[0, 13].data)
 
         # Scales
         max_scale = 2
@@ -622,7 +620,7 @@ class EllipticalFilter(nn.Module):
         self.elliptical_layer8 = GlobalPoolingBlock(2)
         self.fc_elliptical = torch.nn.Linear(
             num_out_channels, 24)  # elliptical
-        self.upsample = torch.nn.Upsample(size=(300, 300), mode='bilinear')
+        self.upsample = torch.nn.Upsample(size=(300, 300), mode='bilinear',align_corners=True)
         self.dropout = nn.Dropout(0.5)
 
     def tanh01(self, x):

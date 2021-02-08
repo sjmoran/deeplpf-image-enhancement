@@ -25,7 +25,6 @@ import model
 import metric
 import os
 import glob
-from skimage.measure import compare_ssim as ssim
 import os.path
 import torch.nn.functional as F
 from math import exp
@@ -62,16 +61,17 @@ from data import Adobe5kDataLoader, Dataset
 from abc import ABCMeta, abstractmethod
 import imageio
 import cv2
+from torch.utils.tensorboard import SummaryWriter
 from skimage.transform import resize
 import matplotlib
 matplotlib.use('agg')
-np.set_printoptions(threshold=np.nan)
-
 
 def main():
 
+    writer = SummaryWriter()
+
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    log_dirpath = "/aiml/data/log_" + timestamp
+    log_dirpath = "./log_" + timestamp
     os.mkdir(log_dirpath)
 
     handlers = [logging.FileHandler(
@@ -86,7 +86,7 @@ def main():
         "--num_epoch", type=int, required=False, help="Number of epoches (default 5000)", default=100000)
     parser.add_argument(
         "--valid_every", type=int, required=False, help="Number of epoches after which to compute validation accuracy",
-        default=500)
+        default=250)
     parser.add_argument(
         "--checkpoint_filepath", required=False, help="Location of checkpoint file", default=None)
     parser.add_argument(
@@ -105,23 +105,23 @@ def main():
     logging.info('Dump validation accuracy every: ' + str(valid_every))
     logging.info('##############################')
 
-    training_data_loader = Adobe5kDataLoader(data_dirpath="/aiml/data/",
-                                             img_ids_filepath="/aiml/data/images_train.txt")
+    training_data_loader = Adobe5kDataLoader(data_dirpath="/home/sjm213/adobe5k/adobe5k/",
+                                             img_ids_filepath="/home/sjm213/adobe5k/adobe5k/images_train.txt")
     training_data_dict = training_data_loader.load_data()
     training_dataset = Dataset(data_dict=training_data_dict, transform=transforms.Compose(
         [transforms.ToPILImage(), transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip(),
          transforms.ToTensor()]),
         normaliser=2 ** 8 - 1, is_valid=False)
 
-    validation_data_loader = Adobe5kDataLoader(data_dirpath="/aiml/data/",
-                                               img_ids_filepath="/aiml/data/images_valid.txt")
+    validation_data_loader = Adobe5kDataLoader(data_dirpath="/home/sjm213/adobe5k/adobe5k/",
+                                               img_ids_filepath="/home/sjm213/adobe5k/adobe5k/images_valid.txt")
     validation_data_dict = validation_data_loader.load_data()
     validation_dataset = Dataset(data_dict=validation_data_dict,
                                  transform=transforms.Compose([transforms.ToTensor()]), normaliser=2 ** 8 - 1,
                                  is_valid=True)
 
-    testing_data_loader = Adobe5kDataLoader(data_dirpath="/aiml/data/",
-                                            img_ids_filepath="/aiml/data/images_test.txt")
+    testing_data_loader = Adobe5kDataLoader(data_dirpath="/home/sjm213/adobe5k/adobe5k/",
+                                            img_ids_filepath="/home/sjm213/adobe5k/adobe5k/images_test.txt")
     testing_data_dict = testing_data_loader.load_data()
     testing_dataset = Dataset(data_dict=testing_data_dict,
                               transform=transforms.Compose([transforms.ToTensor()]), normaliser=2 ** 8 - 1,
@@ -231,7 +231,8 @@ def main():
 
                 running_loss += loss.data[0]
                 examples += batch_size
-            
+                writer.add_scalar('Loss/train', loss.data[0], examples)
+
             logging.info('[%d] train loss: %.15f' %
                          (epoch + 1, running_loss / examples))
 
@@ -261,6 +262,7 @@ def main():
 
                 running_loss += loss.data[0]
                 examples += batch_size
+                writer.add_scalar('Loss/train', loss.data[0], examples)
 
             logging.info('[%d] valid loss: %.15f' %
                          (epoch + 1, running_loss / examples))
