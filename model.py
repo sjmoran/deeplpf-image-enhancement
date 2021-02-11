@@ -772,7 +772,7 @@ class EllipticalFilter(nn.Module):
         scale9 = self.tanh01(G[0, 23]) * max_scale + eps1
 
         ############ Angle of orientation of the ellipses with respect to the y semi-axis
-        angle_1 = torch.acos(torch.clamp((y_axis-ycoord1) / 
+        angle_1 = torch.acos(torch.clamp((y_axis-y_coord1) / 
             (torch.sqrt((x_axis-x_coord1)**2 + (y_axis-y_coord1)**2 + eps1)), -1+eps2, 1-eps2))-A1
 
         angle_2 = torch.acos(torch.clamp((y_axis-y_coord2) / 
