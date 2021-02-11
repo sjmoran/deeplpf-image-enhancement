@@ -514,85 +514,89 @@ class GraduatedFilter(nn.Module):
         G = self.fc_graduated(x)
 
         # Classification values (above or below the line)
-        ab1 = ((self.bin_layer(G[0, 21]))+1)/2
-        ab2 = ((self.bin_layer(G[0, 22]))+1)/2
-        ab3 = ((self.bin_layer(G[0, 23]))+1)/2
+        above_or_below_line1 = ((self.bin_layer(G[0, 0]))+1)/2
+        above_or_below_line2 = ((self.bin_layer(G[0, 1]))+1)/2
+        above_or_below_line3 = ((self.bin_layer(G[0, 2]))+1)/2
 
-        slope1 = G[0, 0].clone()
-        slope2 = G[0, 6].clone()
-        slope3 = G[0, 12].clone()
+        slope1 = G[0, 3].clone()
+        slope2 = G[0, 4].clone()
+        slope3 = G[0, 5].clone()
 
-        G[0, 1] = self.tanh01(G[0, 1]) + eps
-        G[0, 7] = self.tanh01(G[0, 7]) + eps
-        G[0, 13] = self.tanh01(G[0, 13]) + eps
+        y_axis_dist1 = self.tanh01(G[0, 6]) + eps
+        y_axis_dist2 = self.tanh01(G[0, 7]) + eps
+        y_axis_dist3 = self.tanh01(G[0, 8]) + eps
 
-        G[0, 2] = torch.clamp(self.tanh01(G[0, 2]), G[0, 1].data, 1.0)
-        G[0, 8] = torch.clamp(self.tanh01(G[0, 8]), G[0, 7].data, 1.0)
-        G[0, 14] = torch.clamp(self.tanh01(G[0, 14]), G[0, 13].data, 1.0)
+        y_axis_dist1 = torch.clamp(self.tanh01(G[0, 9]), y_axis_dist1.data, 1.0)
+        y_axis_dist2 = torch.clamp(self.tanh01(G[0, 10]), y_axis_dist2.data, 1.0)
+        y_axis_dist3 = torch.clamp(self.tanh01(G[0, 11]), y_axis_dist3.data, 1.0)
 
-        G[0, 18] = torch.clamp(self.tanh01(G[0, 18]), 0, G[0, 1].data)
-        G[0, 19] = torch.clamp(self.tanh01(G[0, 19]), 0, G[0, 7].data)
-        G[0, 20] = torch.clamp(self.tanh01(G[0, 20]), 0, G[0, 13].data)
+        y_axis_dist4= torch.clamp(self.tanh01(G[0, 12]), 0, y_axis_dist1.data)
+        y_axis_dist5 = torch.clamp(self.tanh01(G[0, 13]), 0, y_axis_dist2.data)
+        y_axis_dist6 = torch.clamp(self.tanh01(G[0, 14]), 0, y_axis_dist3.data)
 
         # Scales
         max_scale = 2
         min_scale = 0
 
-        G[0, 3] = self.tanh01(G[0, 3]) * max_scale
-        G[0, 4] = self.tanh01(G[0, 4]) * max_scale
-        G[0, 5] = self.tanh01(G[0, 5]) * max_scale
+        scale_factor1 = self.tanh01(G[0, 15]) * max_scale
+        scale_factor2 = self.tanh01(G[0, 16]) * max_scale
+        scale_factor3 = self.tanh01(G[0, 17]) * max_scale
 
-        G[0, 9] = self.tanh01(G[0, 9]) * max_scale
-        G[0, 10] = self.tanh01(G[0, 10]) * max_scale
-        G[0, 11] = self.tanh01(G[0, 11]) * max_scale
+        scale_factor4 = self.tanh01(G[0, 18]) * max_scale
+        scale_factor5 = self.tanh01(G[0, 19]) * max_scale
+        scale_factor6 = self.tanh01(G[0, 20]) * max_scale
 
-        G[0, 15] = self.tanh01(G[0, 15]) * max_scale
-        G[0, 16] = self.tanh01(G[0, 16]) * max_scale
-        G[0, 17] = self.tanh01(G[0, 17]) * max_scale
+        scale_factor7 = self.tanh01(G[0, 21]) * max_scale
+        scale_factor8 = self.tanh01(G[0, 22]) * max_scale
+        scale_factor9= self.tanh01(G[0, 23]) * max_scale
 
         slope1_angle = torch.atan(slope1)
         slope2_angle = torch.atan(slope2)
         slope3_angle = torch.atan(slope3)
 
-        d1 = self.tanh01(G[0, 2]*torch.cos(slope1_angle))
-        d2 = self.tanh01(G[0, 18]*torch.cos(slope1_angle))
-        d3 = self.tanh01(G[0, 8]*torch.cos(slope2_angle))
-        d4 = self.tanh01(G[0, 19]*torch.cos(slope2_angle))
-        d5 = self.tanh01(G[0, 14]*torch.cos(slope3_angle))
-        d6 = self.tanh01(G[0, 20]*torch.cos(slope3_angle))
+        # Distances between central line and two outer lines 
+        d1 = self.tanh01(y_axis_dist1*torch.cos(slope1_angle))
+        d2 = self.tanh01(y_axis_dist4*torch.cos(slope1_angle))
+        d3 = self.tanh01(y_axis_dist2*torch.cos(slope2_angle))
+        d4 = self.tanh01(y_axis_dist5*torch.cos(slope2_angle))
+        d5 = self.tanh01(y_axis_dist3*torch.cos(slope3_angle))
+        d6 = self.tanh01(y_axis_dist6*torch.cos(slope3_angle))
 
-        top_line1 = self.tanh01(y_axis - (slope1 * x_axis + G[0, 1] + d1))
-        top_line2 = self.tanh01(y_axis - (slope2 * x_axis + G[0, 7] + d3))
-        top_line3 = self.tanh01(y_axis - (slope3 * x_axis + G[0, 13] + d5))
+        top_line1 = self.tanh01(y_axis - (slope1 * x_axis + y_axis_dist1 + d1))
+        top_line2 = self.tanh01(y_axis - (slope2 * x_axis + y_axis_dist2 + d3))
+        top_line3 = self.tanh01(y_axis - (slope3 * x_axis + y_axis_dist3 + d5))
 
+        '''
+        The following are the scale factors for each of the 9 graduated filters
+        '''
         mask_scale1 = self.get_inverted_mask(
-            G[0, 3], ab1, d1, d2, max_scale, top_line1)
+            scale_factor1, above_or_below_line1, d1, d2, max_scale, top_line1)
         mask_scale2 = self.get_inverted_mask(
-            G[0, 4], ab1, d1, d2, max_scale, top_line1)
+            scale_factor2, above_or_below_line1, d1, d2, max_scale, top_line1)
         mask_scale3 = self.get_inverted_mask(
-            G[0, 5], ab1, d1, d2, max_scale, top_line1)
+            scale_factor3, above_or_below_line1, d1, d2, max_scale, top_line1)
 
         mask_scale_1 = torch.cat(
             (mask_scale1, mask_scale2, mask_scale3), dim=0)
         mask_scale_1 = torch.clamp(mask_scale_1.unsqueeze(0), 0, max_scale)
 
         mask_scale4 = self.get_inverted_mask(
-            G[0, 9], ab2, d3, d4, max_scale, top_line2)
+            scale_factor4, above_or_below_line2, d3, d4, max_scale, top_line2)
         mask_scale5 = self.get_inverted_mask(
-            G[0, 10], ab2, d3, d4, max_scale, top_line2)
+            scale_factor5, above_or_below_line2, d3, d4, max_scale, top_line2)
         mask_scale6 = self.get_inverted_mask(
-            G[0, 11], ab2, d3, d4, max_scale, top_line2)
+            scale_factor6, above_or_below_line2, d3, d4, max_scale, top_line2)
 
         mask_scale_4 = torch.cat(
             (mask_scale4, mask_scale5, mask_scale6), dim=0)
         mask_scale_4 = torch.clamp(mask_scale_4.unsqueeze(0), 0, max_scale)
 
         mask_scale7 = self.get_inverted_mask(
-            G[0, 15], G[0, 23], d5, d6, max_scale, top_line3)
+            scale_factor7, above_or_below_line3, d5, d6, max_scale, top_line3)
         mask_scale8 = self.get_inverted_mask(
-            G[0, 16], G[0, 23], d5, d6, max_scale, top_line3)
+            scale_factor8, above_or_below_line3, d5, d6, max_scale, top_line3)
         mask_scale9 = self.get_inverted_mask(
-            G[0, 17], G[0, 23], d5, d6, max_scale, top_line3)
+            scale_factor9, above_or_below_line3, d5, d6, max_scale, top_line3)
 
         mask_scale_7 = torch.cat(
             (mask_scale7, mask_scale8, mask_scale9), dim=0)
@@ -768,13 +772,13 @@ class EllipticalFilter(nn.Module):
         scale9 = self.tanh01(G[0, 23]) * max_scale + eps1
 
         ############ Angle of orientation of the ellipses with respect to the y semi-axis
-        angle_1 = torch.acos(torch.clamp((x_axis-x_coord1) / 
+        angle_1 = torch.acos(torch.clamp((y_axis-ycoord1) / 
             (torch.sqrt((x_axis-x_coord1)**2 + (y_axis-y_coord1)**2 + eps1)), -1+eps2, 1-eps2))-A1
 
-        angle_2 = torch.acos(torch.clamp((x_axis-x_coord2) / 
+        angle_2 = torch.acos(torch.clamp((y_axis-y_coord2) / 
             (torch.sqrt((x_axis-x_coord2) ** 2 + (y_axis-y_coord2)**2 + eps1)), -1+eps2, 1-eps2))-A2
         
-        angle_3 = torch.acos(torch.clamp((x_axis-x_coord3) / 
+        angle_3 = torch.acos(torch.clamp((y_axis-y_coord3) / 
             (torch.sqrt((x_axis-x_coord3) ** 2 + (y_axis-y_coord3)**2 + eps1)), -1+eps2, 1-eps2))-A3
 
         ############ Radius of the ellipses
