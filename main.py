@@ -86,7 +86,7 @@ def main():
         "--num_epoch", type=int, required=False, help="Number of epoches (default 5000)", default=100000)
     parser.add_argument(
         "--valid_every", type=int, required=False, help="Number of epoches after which to compute validation accuracy",
-        default=250)
+        default=25)
     parser.add_argument(
         "--checkpoint_filepath", required=False, help="Location of checkpoint file", default=None)
     parser.add_argument(
@@ -128,12 +128,12 @@ def main():
                               is_valid=True)
 
     training_data_loader = torch.utils.data.DataLoader(training_dataset, batch_size=1, shuffle=True,
-                                                       num_workers=4)
+                                                       num_workers=10)
     testing_data_loader = torch.utils.data.DataLoader(testing_dataset, batch_size=1, shuffle=False,
-                                                      num_workers=4)
+                                                      num_workers=10)
     validation_data_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=1,
                                                          shuffle=False,
-                                                         num_workers=4)
+                                                         num_workers=10)
 
     if (checkpoint_filepath is not None) and (inference_img_dirpath is not None):
 
@@ -145,7 +145,7 @@ def main():
                                     is_valid=True)
 
         inference_data_loader = torch.utils.data.DataLoader(inference_dataset, batch_size=1, shuffle=False,
-                                                            num_workers=4)
+                                                            num_workers=10)
 
         '''
         Performs inference on all the images in inference_img_dirpath
@@ -168,7 +168,9 @@ def main():
 
     else:
 
+        print(torch.cuda.is_available())
         net = model.DeepLPFNet()
+        net.cuda(0)
 
         logging.info('######### Network created #########')
         logging.info('Architecture:\n' + str(net))
@@ -200,7 +202,7 @@ def main():
         psnr_avg = 0.0
         ssim_avg = 0.0
         batch_size = 1
-        net.cuda()
+        total_examples = 0
 
         for epoch in range(num_epoch):
 
@@ -231,12 +233,16 @@ def main():
 
                 running_loss += loss.data[0]
                 examples += batch_size
-                writer.add_scalar('Loss/train', loss.data[0], examples)
+                total_examples+=batch_size
+
+                writer.add_scalar('Loss/train', loss.data[0], total_examples)
 
             logging.info('[%d] train loss: %.15f' %
                          (epoch + 1, running_loss / examples))
+            writer.add_scalar('Loss/train_smooth', running_loss / examples, epoch + 1)
 
             # Valid loss
+            '''
             examples = 0.0
             running_loss = 0.0
 
@@ -262,12 +268,16 @@ def main():
 
                 running_loss += loss.data[0]
                 examples += batch_size
-                writer.add_scalar('Loss/train', loss.data[0], examples)
+                total_examples+=batch_size
+
+                writer.add_scalar('Loss/train', loss.data[0], total_examples)
 
             logging.info('[%d] valid loss: %.15f' %
                          (epoch + 1, running_loss / examples))
+            writer.add_scalar('Loss/valid_smooth', running_loss / examples, epoch + 1)
 
             net.train()
+            '''
 
             if (epoch + 1) % valid_every == 0:
 
@@ -296,7 +306,7 @@ def main():
                                                                                                                                     test_psnr, test_loss.tolist()[
                                                                                                                                         0],
                                                                                                                                     epoch)
-                    torch.save(net, snapshot_path)
+                    torch.save(net.state_dict(), snapshot_path)
 
                 net.train()
 

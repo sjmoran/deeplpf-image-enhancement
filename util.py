@@ -70,7 +70,7 @@ class ImageProcessing(object):
         img = img.view(-1, 3)
 
         img = (img / 12.92) * img.le(0.04045).float() + (((torch.clamp(img,
-                                                                       min=0.0001) + 0.055) / 1.055) ** 2.4) * img.gt(0.04045).float()
+                                                                       min=0.000001) + 0.055) / 1.055) ** 2.4) * img.gt(0.04045).float()
 
         rgb_to_xyz = Variable(torch.FloatTensor([  # X        Y          Z
                                                 [0.412453, 0.212671,
