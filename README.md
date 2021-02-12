@@ -14,13 +14,38 @@ Huawei Noah's Ark Lab
 Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhancement. Here you will find a link to the code and information on the datasets. Please raise a Github issue if you need assistance of have any questions on the research. 
 <p></p>
 
-### Code
-
-17th July 2020: Code is located [here](https://github.com/huawei-noah/noah-research/tree/master/DeepLPF).
-
 ### Requirements
 
 requirements.txt contains the Python packages used by the code.
+
+### How to train and inference
+
+* **8th February 2021:  Contact [Sean Moran](sean.j.moran@gmail.com) if you wish to download the Adobe5K pre-processed dataset (i.e. Adobe-DPE) according to the pre-processing procedure outline in the DeepPhotoEnhancer paper.**
+
+#### Train
+
+Instructions:
+
+To get this code working on your system / problem you will need to edit the data loading functions, as follows:
+
+1. main.py, change the paths for the data directories to point to your data directory
+2. data.py, lines 228, 236, change the folder names of the data input and output directories to point to your folder names
+
+To train, run the command:
+
+```
+python3 main.py
+```
+
+#### Inference
+
+Place the images you wish to infer in a directory e.g. ./adobe5k/test_images
+
+Run the command:
+
+```
+python3 main.py --inference_img_dirpath=./adobe5k/test_images/ --checkpoint_filepath=./deeplpf_models/deeplpf_epoch_500_model.pt
+```
 
 ### Bibtex
 
@@ -35,8 +60,6 @@ year = {2020}
 ```
 
 ### Datasets
-
-**8th February 2021:  Contact Sean Moran if you wish to download the Adobe5K pre-processed dataset (i.e. Adobe-DPE) according to the pre-processing procedure outline in the DeepPhotoEnhancer paper.**
 
 * __Adobe-DPE__ (5000 images, RGB, RGB pairs): this dataset can be downloaded [here](https://data.csail.mit.edu/graphics/fivek/). After downloading this dataset you will need to use Lightroom to pre-process the images according to the procedure outlined in the DeepPhotoEnhancer (DPE) [paper](https://github.com/nothinglo/Deep-Photo-Enhancer). Please see the issue [here](https://github.com/nothinglo/Deep-Photo-Enhancer/issues/38#issuecomment-449786636) for instructions. Artist C retouching is used as the groundtruth/target. Feel free to raise a Gitlab issue if you need assistance with this (or indeed the Adobe-UPE dataset below). You can also find the training, validation and testing dataset splits for Adobe-DPE in the following [file](https://www.cmlab.csie.ntu.edu.tw/project/Deep-Photo-Enhancer/%5BExperimental_Code_Data%5D_Deep-Photo-Enhancer.zip). The splits can also be found the the Adobe5K_DPE directory in this repository.
 
