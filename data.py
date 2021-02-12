@@ -22,6 +22,7 @@ from matplotlib.image import imread, imsave
 from scipy.ndimage.filters import convolve
 import torch.nn.init as net_init
 import datetime
+import torchvision.transforms.functional as TF
 import util
 import math
 import numpy as np
@@ -95,23 +96,35 @@ class Dataset(torch.utils.data.Dataset):
             if idx in self.data_dict:
 
                 output_img = util.ImageProcessing.load_image(
-                    self.data_dict[idx]['output_img'], normaliser=1)
+                    self.data_dict[idx]['output_img'], normaliser=self.normaliser)
                 input_img = util.ImageProcessing.load_image(
-                    self.data_dict[idx]['input_img'], normaliser=1)
+                    self.data_dict[idx]['input_img'], normaliser=self.normaliser)
 
-                input_img = input_img.astype(np.uint8)
-                output_img = output_img.astype(np.uint8)
+                if self.normaliser==1:
+                    input_img = input_img.astype(np.uint8)
+                    output_img = output_img.astype(np.uint8)
 
-                if output_img.shape[2] == 4:
-                    output_img = np.delete(output_img, 3, -1)
-                if input_img.shape[2] == 4:
-                    input_img = np.delete(input_img, 3, -1)
+                input_img = TF.to_pil_image(input_img)
+                output_img = TF.to_pil_image(output_img)
 
-                seed = random.randint(0, 100000)
-                random.seed(seed)
-                input_img = self.transform(input_img)
-                random.seed(seed)
-                output_img = self.transform(output_img)
+                if not self.is_valid:
+
+                    if random.random()>0.5:
+
+                        # Random horizontal flipping
+                        if random.random() > 0.5:
+                            input_img = TF.hflip(input_img)
+                            output_img = TF.hflip(output_img)
+
+                        # Random vertical flipping
+                        if random.random() > 0.5:
+                            input_img = TF.vflip(input_img)
+                            output_img = TF.vflip(output_img)
+
+                    # Transform to tensor
+                    input_img = TF.to_tensor(input_img)
+                    output_img = TF.to_tensor(output_img)
+
 
                 return {'input_img': input_img, 'output_img': output_img,
                         'name': self.data_dict[idx]['input_img'].split("/")[-1]}

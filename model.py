@@ -1021,7 +1021,7 @@ class DeepLPFNet(nn.Module):
         super(DeepLPFNet, self).__init__()
         self.backbonenet = unet.UNetModel()
         self.deeplpfnet = DeepLPFParameterPrediction()
-
+        
     def forward(self, img):
         """Neural network forward function
 
@@ -1032,5 +1032,5 @@ class DeepLPFNet(nn.Module):
         """
         feat = self.backbonenet(img)
         img = self.deeplpfnet(feat)
-
+        
         return img

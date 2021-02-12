@@ -25,6 +25,7 @@ import model
 import metric
 import os
 import glob
+import torchvision.transforms.functional as TF
 import os.path
 import torch.nn.functional as F
 from math import exp
@@ -92,42 +93,41 @@ def main():
     parser.add_argument(
         "--inference_img_dirpath", required=False,
         help="Directory containing images to run through a saved DeepLPF model instance", default=None)
+    parser.add_argument(
+        "--training_img_dirpath", required=False,
+        help="Directory containing images to train a DeepLPF model instance", default="/home/sjm213/adobe5k/adobe5k/")
 
     args = parser.parse_args()
     num_epoch = args.num_epoch
     valid_every = args.valid_every
     checkpoint_filepath = args.checkpoint_filepath
     inference_img_dirpath = args.inference_img_dirpath
+    training_img_dirpath = args.training_img_dirpath
 
     logging.info('######### Parameters #########')
     logging.info('Number of epochs: ' + str(num_epoch))
     logging.info('Logging directory: ' + str(log_dirpath))
     logging.info('Dump validation accuracy every: ' + str(valid_every))
+    logging.info('Training image directory: ' + str(training_img_dirpath))
     logging.info('##############################')
 
-    training_data_loader = Adobe5kDataLoader(data_dirpath="/home/sjm213/adobe5k/adobe5k/",
-                                             img_ids_filepath="/home/sjm213/adobe5k/adobe5k/images_train.txt")
+    training_data_loader = Adobe5kDataLoader(data_dirpath=training_img_dirpath,
+                                             img_ids_filepath=training_img_dirpath+"/images_train.txt")
     training_data_dict = training_data_loader.load_data()
-    training_dataset = Dataset(data_dict=training_data_dict, transform=transforms.Compose(
-        [transforms.ToPILImage(), transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip(),
-         transforms.ToTensor()]),
-        normaliser=2 ** 8 - 1, is_valid=False)
 
-    validation_data_loader = Adobe5kDataLoader(data_dirpath="/home/sjm213/adobe5k/adobe5k/",
-                                               img_ids_filepath="/home/sjm213/adobe5k/adobe5k/images_valid.txt")
+    training_dataset = Dataset(data_dict=training_data_dict, normaliser=1, is_valid=False)
+
+    validation_data_loader = Adobe5kDataLoader(data_dirpath=training_img_dirpath,
+                                               img_ids_filepath=training_img_dirpath+"/images_valid.txt")
     validation_data_dict = validation_data_loader.load_data()
-    validation_dataset = Dataset(data_dict=validation_data_dict,
-                                 transform=transforms.Compose([transforms.ToTensor()]), normaliser=2 ** 8 - 1,
-                                 is_valid=True)
+    validation_dataset = Dataset(data_dict=validation_data_dict, normaliser=1, is_valid=True)
 
-    testing_data_loader = Adobe5kDataLoader(data_dirpath="/home/sjm213/adobe5k/adobe5k/",
-                                            img_ids_filepath="/home/sjm213/adobe5k/adobe5k/images_test.txt")
+    testing_data_loader = Adobe5kDataLoader(data_dirpath=training_img_dirpath,
+                                            img_ids_filepath=training_img_dirpath+"/images_test.txt")
     testing_data_dict = testing_data_loader.load_data()
-    testing_dataset = Dataset(data_dict=testing_data_dict,
-                              transform=transforms.Compose([transforms.ToTensor()]), normaliser=2 ** 8 - 1,
-                              is_valid=True)
+    testing_dataset = Dataset(data_dict=testing_data_dict, normaliser=1,is_valid=True)
 
-    training_data_loader = torch.utils.data.DataLoader(training_dataset, batch_size=1, shuffle=True,
+    training_data_loader = torch.utils.data.DataLoader(training_dataset, batch_size=1, shuffle=False,
                                                        num_workers=10)
     testing_data_loader = torch.utils.data.DataLoader(testing_dataset, batch_size=1, shuffle=False,
                                                       num_workers=10)
@@ -168,7 +168,6 @@ def main():
 
     else:
 
-        print(torch.cuda.is_available())
         net = model.DeepLPFNet()
         net.cuda(0)
 
@@ -212,20 +211,18 @@ def main():
             
             for batch_num, data in enumerate(training_data_loader, 0):
 
-                input_img_batch, output_img_batch, category = Variable(data['input_img'],
+                input_img_batch, gt_img_batch, category = Variable(data['input_img'],
                                                                        requires_grad=False).cuda(), Variable(data['output_img'],
                                                                                                              requires_grad=False).cuda(), data[
                     'name']
 
                 start_time = time.time()
-                net_output_img_batch = net(
-                    input_img_batch)
-                net_output_img_batch = torch.clamp(
-                    net_output_img_batch, 0.0, 1.0)
+                net_img_batch = net(input_img_batch)
+                net_img_batch = torch.clamp(net_img_batch, 0.0, 1.0)
 
                 elapsed_time = time.time() - start_time
 
-                loss = criterion(net_output_img_batch, output_img_batch)
+                loss = criterion(net_img_batch, gt_img_batch)
 
                 optimizer.zero_grad()
                 loss.backward()
