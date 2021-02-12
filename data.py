@@ -121,9 +121,9 @@ class Dataset(torch.utils.data.Dataset):
                             input_img = TF.vflip(input_img)
                             output_img = TF.vflip(output_img)
 
-                    # Transform to tensor
-                    input_img = TF.to_tensor(input_img)
-                    output_img = TF.to_tensor(output_img)
+                # Transform to tensor
+                input_img = TF.to_tensor(input_img)
+                output_img = TF.to_tensor(output_img)
 
 
                 return {'input_img': input_img, 'output_img': output_img,

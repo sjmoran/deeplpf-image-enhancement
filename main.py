@@ -25,7 +25,6 @@ import model
 import metric
 import os
 import glob
-import torchvision.transforms.functional as TF
 import os.path
 import torch.nn.functional as F
 from math import exp
