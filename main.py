@@ -126,7 +126,7 @@ def main():
     testing_data_dict = testing_data_loader.load_data()
     testing_dataset = Dataset(data_dict=testing_data_dict, normaliser=1,is_valid=True)
 
-    training_data_loader = torch.utils.data.DataLoader(training_dataset, batch_size=1, shuffle=False,
+    training_data_loader = torch.utils.data.DataLoader(training_dataset, batch_size=1, shuffle=True,
                                                        num_workers=10)
     testing_data_loader = torch.utils.data.DataLoader(testing_dataset, batch_size=1, shuffle=False,
                                                       num_workers=10)
