@@ -989,15 +989,12 @@ class DeepLPFParameterPrediction(nn.Module):
         torch.cuda.empty_cache()
         shape = x.shape
 
-        img_clamped = torch.clamp(img, 0, 1)
-
         img_cubic = self.cubic_filter.get_cubic_mask(feat, img)
        
-  
         mask_scale_graduated = self.graduated_filter.get_graduated_mask(
-            feat, img_clamped)
+            feat, img)
         mask_scale_elliptical = self.elliptical_filter.get_elliptical_mask(
-            feat, img_clamped)
+            feat, img)
        
         mask_scale_fuse = torch.clamp(
             mask_scale_graduated+mask_scale_elliptical, 0, 2)
