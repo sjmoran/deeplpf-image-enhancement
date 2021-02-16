@@ -86,7 +86,7 @@ def main():
         "--num_epoch", type=int, required=False, help="Number of epoches (default 5000)", default=100000)
     parser.add_argument(
         "--valid_every", type=int, required=False, help="Number of epoches after which to compute validation accuracy",
-        default=3)
+        default=25)
     parser.add_argument(
         "--checkpoint_filepath", required=False, help="Location of checkpoint file", default=None)
     parser.add_argument(
