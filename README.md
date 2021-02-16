@@ -37,12 +37,16 @@ python3 main.py
 
 #### Inference
 
-Place the images you wish to infer in a directory e.g. ./adobe5k/test_images
+The directory _pretrained_models_ contains 3 DeepLPF pre-trained models on the Adobe5K_DPE dataset. The model with the highest validation dataset PSNR is:
+
+* deeplpf_validpsnr_24.19937744358101_validloss_0.0309175793081522_testpsnr_24.521476595705398_testloss_0.029493404552340508_epoch_74_model.pt
+
+To use this model for inference, place the images you wish to infer in a directory e.g. ./adobe5k_dpe/deeplpf_example_test_input/
 
 Run the command:
 
 ```
-python3 main.py --inference_img_dirpath=./adobe5k/test_images/ --checkpoint_filepath=./pretrained_models/deeplpf_validpsnr_24.19937744358101_validloss_0.0309175793081522_testpsnr_24.521476595705398_testloss_0.029493404552340508_epoch_74_model.pt
+python3 main.py --inference_img_dirpath=./adobe5k_dpe/deeplpf_example_test_input/ --checkpoint_filepath=./pretrained_models/deeplpf_validpsnr_24.19937744358101_validloss_0.0309175793081522_testpsnr_24.521476595705398_testloss_0.029493404552340508_epoch_74_model.pt
 ```
 
 ### Bibtex
