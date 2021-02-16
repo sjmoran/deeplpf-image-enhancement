@@ -39,9 +39,9 @@ python3 main.py
 <img src="./images/deeplpf_training_loss.png" width="80%"/>
 </p>
 
-#### Inference
+#### Inference - Using Pre-trained Models for Prediction
 
-The directory _pretrained_models_ contains four DeepLPF pre-trained models on the Adobe5K_DPE dataset, each model output from different epochs. The model with the highest validation dataset PSNR (24.40 dB) is at epoch 99:
+The directory _pretrained_models_ contains a set of four DeepLPF pre-trained models on the Adobe5K_DPE dataset, each model output from different epochs. The model with the highest validation dataset PSNR (24.40 dB) is at epoch 99:
 
 * deeplpf_validpsnr_24.40217225909678_validloss_0.02979421615600586_testpsnr_24.86015350359045_testloss_0.027900682762265205_epoch_99_model.pt
 
