@@ -35,6 +35,10 @@ To train, run the command:
 python3 main.py
 ```
 
+<p align="center">
+<img src="./images/deeplpf_training_loss.png" width="80%"/>
+</p>
+
 #### Inference
 
 The directory _pretrained_models_ contains 3 DeepLPF pre-trained models on the Adobe5K_DPE dataset. The model with the highest validation dataset PSNR is:
