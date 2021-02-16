@@ -43,7 +43,7 @@ python3 main.py
 
 The directory _pretrained_models_ contains three DeepLPF pre-trained models on the Adobe5K_DPE dataset. The model with the highest validation dataset PSNR is at epoch 74:
 
-* deeplpf_validpsnr_24.19937744358101_validloss_0.0309175793081522_testpsnr_24.521476595705398_testloss_0.029493404552340508_epoch_74_model.pt
+* deeplpf_validpsnr_24.40217225909678_validloss_0.02979421615600586_testpsnr_24.86015350359045_testloss_0.027900682762265205_epoch_99_model.pt
 
 To use this model for inference, place the images you wish to infer in a directory e.g. ./adobe5k_dpe/deeplpf_example_test_input/
 
