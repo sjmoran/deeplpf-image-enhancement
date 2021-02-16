@@ -41,7 +41,7 @@ python3 main.py
 
 #### Inference
 
-The directory _pretrained_models_ contains three DeepLPF pre-trained models on the Adobe5K_DPE dataset. The model with the highest validation dataset PSNR is at epoch 74:
+The directory _pretrained_models_ contains three DeepLPF pre-trained models on the Adobe5K_DPE dataset. The model with the highest validation dataset PSNR (24.40 dB) is at epoch 99:
 
 * deeplpf_validpsnr_24.40217225909678_validloss_0.02979421615600586_testpsnr_24.86015350359045_testloss_0.027900682762265205_epoch_99_model.pt
 
