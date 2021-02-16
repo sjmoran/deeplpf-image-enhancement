@@ -58,7 +58,7 @@ np.set_printoptions(threshold=sys.maxsize)
 
 class Dataset(torch.utils.data.Dataset):
 
-    def __init__(self, data_dict, transform=None, normaliser=2 ** 8 - 1, is_valid=False):
+    def __init__(self, data_dict, transform=None, normaliser=2 ** 8 - 1, is_valid=False, is_inference=False):
         """Initialisation for the Dataset object
 
         :param data_dict: dictionary of dictionaries containing images
@@ -71,6 +71,7 @@ class Dataset(torch.utils.data.Dataset):
         self.data_dict = data_dict
         self.normaliser = normaliser
         self.is_valid = is_valid
+        self.is_inference = is_inference
 
     def __len__(self):
         """Returns the number of images in the dataset
@@ -93,7 +94,21 @@ class Dataset(torch.utils.data.Dataset):
         """
         while True:
 
-            if idx in self.data_dict:
+            if self.is_inference:
+
+                input_img = util.ImageProcessing.load_image(
+                    self.data_dict[idx]['input_img'], normaliser=self.normaliser)
+
+                if self.normaliser==1:
+                    input_img = input_img.astype(np.uint8)
+
+                input_img = TF.to_pil_image(input_img)
+                input_img = TF.to_tensor(input_img)
+
+                return {'input_img': input_img, 'output_img': input_img,
+                        'name': self.data_dict[idx]['input_img'].split("/")[-1]}
+
+            elif idx in self.data_dict:
 
                 output_img = util.ImageProcessing.load_image(
                     self.data_dict[idx]['output_img'], normaliser=self.normaliser)

@@ -110,38 +110,25 @@ def main():
     logging.info('Training image directory: ' + str(training_img_dirpath))
     logging.info('##############################')
 
-    training_data_loader = Adobe5kDataLoader(data_dirpath=training_img_dirpath,
-                                             img_ids_filepath=training_img_dirpath+"/images_train.txt")
-    training_data_dict = training_data_loader.load_data()
-
-    training_dataset = Dataset(data_dict=training_data_dict, normaliser=1, is_valid=False)
-
-    validation_data_loader = Adobe5kDataLoader(data_dirpath=training_img_dirpath,
-                                               img_ids_filepath=training_img_dirpath+"/images_valid.txt")
-    validation_data_dict = validation_data_loader.load_data()
-    validation_dataset = Dataset(data_dict=validation_data_dict, normaliser=1, is_valid=True)
-
-    testing_data_loader = Adobe5kDataLoader(data_dirpath=training_img_dirpath,
-                                            img_ids_filepath=training_img_dirpath+"/images_test.txt")
-    testing_data_dict = testing_data_loader.load_data()
-    testing_dataset = Dataset(data_dict=testing_data_dict, normaliser=1,is_valid=True)
-
-    training_data_loader = torch.utils.data.DataLoader(training_dataset, batch_size=1, shuffle=True,
-                                                       num_workers=10)
-    testing_data_loader = torch.utils.data.DataLoader(testing_dataset, batch_size=1, shuffle=False,
-                                                      num_workers=10)
-    validation_data_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=1,
-                                                         shuffle=False,
-                                                         num_workers=10)
+    
 
     if (checkpoint_filepath is not None) and (inference_img_dirpath is not None):
 
+        '''
+        inference_img_dirpath: the actual filepath should have "input" in the name an in the level above where the images 
+        for inference are located, there should be a file "images_inference.txt with each image filename as one line i.e."
+        
+        images_inference.txt    ../
+                                a1000.tif
+                                a1242.tif
+                                etc
+        '''
         inference_data_loader = Adobe5kDataLoader(data_dirpath=inference_img_dirpath,
-                                                  img_ids_filepath=inference_img_dirpath+"/images_inference.txt")
+                                                  img_ids_filepath=inference_img_dirpath+"../images_inference.txt")
         inference_data_dict = inference_data_loader.load_data()
         inference_dataset = Dataset(data_dict=inference_data_dict,
-                                    transform=transforms.Compose([transforms.ToTensor()]), normaliser=2 ** 8 - 1,
-                                    is_valid=True)
+                                    transform=transforms.Compose([transforms.ToTensor()]), normaliser=1,
+                                    is_inference=True)
 
         inference_data_loader = torch.utils.data.DataLoader(inference_dataset, batch_size=1, shuffle=False,
                                                             num_workers=10)
@@ -152,21 +139,42 @@ def main():
         logging.info(
             "Performing inference with images in directory: " + inference_img_dirpath)
 
-        net = torch.load(checkpoint_filepath,
-                         map_location=lambda storage, location: storage)
-
-        # switch model to evaluation mode
+        net = model.DeepLPFNet()
+        net.load_state_dict(torch.load(checkpoint_filepath))
         net.eval()
 
         criterion = model.DeepLPFLoss()
 
-        testing_evaluator = metric.Evaluator(
+        inference_evaluator = metric.Evaluator(
             criterion, inference_data_loader, "test", log_dirpath)
 
-        testing_evaluator.evaluate(net, epoch=0)
+        inference_evaluator.evaluate(net, epoch=0)
 
     else:
 
+        training_data_loader = Adobe5kDataLoader(data_dirpath=training_img_dirpath,
+                                                 img_ids_filepath=training_img_dirpath+"/images_train.txt")
+        training_data_dict = training_data_loader.load_data()
+
+        training_dataset = Dataset(data_dict=training_data_dict, normaliser=1, is_valid=False)
+
+        validation_data_loader = Adobe5kDataLoader(data_dirpath=training_img_dirpath,
+                                               img_ids_filepath=training_img_dirpath+"/images_valid.txt")
+        validation_data_dict = validation_data_loader.load_data()
+        validation_dataset = Dataset(data_dict=validation_data_dict, normaliser=1, is_valid=True)
+
+        testing_data_loader = Adobe5kDataLoader(data_dirpath=training_img_dirpath,
+                                            img_ids_filepath=training_img_dirpath+"/images_test.txt")
+        testing_data_dict = testing_data_loader.load_data()
+        testing_dataset = Dataset(data_dict=testing_data_dict, normaliser=1,is_valid=True)
+
+        training_data_loader = torch.utils.data.DataLoader(training_dataset, batch_size=1, shuffle=True,
+                                                       num_workers=10)
+        testing_data_loader = torch.utils.data.DataLoader(testing_dataset, batch_size=1, shuffle=False,
+                                                      num_workers=10)
+        validation_data_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=1,
+                                                         shuffle=False,
+                                                         num_workers=10)
         net = model.DeepLPFNet()
         net.cuda(0)
 
