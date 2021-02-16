@@ -16,7 +16,7 @@ Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhanc
 
 ### Requirements
 
-requirements.txt contains the Python packages used by the code.
+_requirements.txt_ contains the Python packages used by the code.
 
 ### How to train DeepLPF and use the model for inference
 
