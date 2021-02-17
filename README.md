@@ -27,7 +27,7 @@ Instructions:
 To get this code working on your system / problem you will need to edit the data loading functions, as follows:
 
 1. main.py, change the paths for the data directories to point to your data directory
-2. data.py, lines 228, 236, change the folder names of the data input and output directories to point to your folder names
+2. data.py, lines 248, 256, change the folder names of the data input and output directories to point to your folder names
 
 To train, run the command:
 
