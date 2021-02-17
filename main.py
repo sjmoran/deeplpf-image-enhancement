@@ -124,7 +124,7 @@ def main():
                                 etc
         '''
         inference_data_loader = Adobe5kDataLoader(data_dirpath=inference_img_dirpath,
-                                                  img_ids_filepath=inference_img_dirpath+"../images_inference.txt")
+                                                  img_ids_filepath=inference_img_dirpath+"/images_inference.txt")
         inference_data_dict = inference_data_loader.load_data()
         inference_dataset = Dataset(data_dict=inference_data_dict,
                                     transform=transforms.Compose([transforms.ToTensor()]), normaliser=1,

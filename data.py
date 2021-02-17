@@ -98,14 +98,19 @@ class Dataset(torch.utils.data.Dataset):
 
                 input_img = util.ImageProcessing.load_image(
                     self.data_dict[idx]['input_img'], normaliser=self.normaliser)
+                output_img = util.ImageProcessing.load_image(
+                    self.data_dict[idx]['output_img'], normaliser=self.normaliser)
 
                 if self.normaliser==1:
                     input_img = input_img.astype(np.uint8)
+                    output_img = output_img.astype(np.uint8)
 
                 input_img = TF.to_pil_image(input_img)
                 input_img = TF.to_tensor(input_img)
+                output_img = TF.to_pil_image(output_img)
+                output_img = TF.to_tensor(output_img)
 
-                return {'input_img': input_img, 'output_img': input_img,
+                return {'input_img': input_img, 'output_img': output_img,
                         'name': self.data_dict[idx]['input_img'].split("/")[-1]}
 
             elif idx in self.data_dict:
@@ -252,7 +257,7 @@ class Adobe5kDataLoader(DataLoader):
                                              # output data folder
 
                         output_img_filepath = file
-
+                        print(root)
                         self.data_dict[idx_tmp]['output_img'] = root + \
                             "/" + output_img_filepath
 
