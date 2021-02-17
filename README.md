@@ -48,14 +48,13 @@ The directory _pretrained_models_ contains a set of four DeepLPF pre-trained mod
 To use this model for inference:
 
 1. Place the images you wish to infer in a directory e.g. ./adobe5k_dpe/deeplpf_example_test_input/. Make sure the directory path has the word "input" somewhere in the path.
-2. Place the names of the images (without extension) in a text file in the directory above the directory containing the images i.e. ./adobe5k_dpe/ e.g. ./adobe5k_dpe/images_inference.txt
-3. Run the command and the results will appear in a timestamped directory in the same directory as main.py:
+2. Place the images you wish to use as groundtruth in a directory e.g. ./adobe5k_dpe/deeplpf_example_test_output/. Make sure the directory path has the word "output" somewhere in the path.
+3. Place the names of the images (without extension) in a text file in the directory above the directory containing the images i.e. ./adobe5k_dpe/ e.g. ./adobe5k_dpe/images_inference.txt
+4. Run the command and the results will appear in a timestamped directory in the same directory as main.py:
 
 ```
 python3 main.py --inference_img_dirpath=./adobe5k_dpe/deeplpf_example_test_input/ --checkpoint_filepath=./pretrained_models/deeplpf_validpsnr_24.40217225909678_validloss_0.02979421615600586_testpsnr_24.86015350359045_testloss_0.027900682762265205_epoch_99_model.pt
 ```
-
-TODO: the above inference procedure assumes no groundtruth is provided and so the PSNR and SSIM will be meaningless (the code will compute the PSNR of the predicted image to the input image, rather than the PSNR between the predicted image and the groundtruth image). Future work can add in the ability to compare against the groundtruth images.
 
 ### Bibtex
 
