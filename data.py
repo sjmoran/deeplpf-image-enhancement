@@ -257,7 +257,7 @@ class Adobe5kDataLoader(DataLoader):
                                              # output data folder
 
                         output_img_filepath = file
-                        print(root)
+        
                         self.data_dict[idx_tmp]['output_img'] = root + \
                             "/" + output_img_filepath
 
