@@ -5,7 +5,7 @@ This is a PyTorch implementation of the CVPR 2020 paper:
 
 Please cite the paper if you use this code
 
-Tested with Pytorch 0.3.1, Python 3.5
+Tested with Pytorch 1.7.1, Python 3.7.9
 
 Authors: Sean Moran (sean.j.moran@gmail.com), 
          Pierre Marza (pierre.marza@gmail.com)
@@ -16,9 +16,9 @@ To get this code working on your system / problem you will need to edit the
 data loading functions, as follows:
 
 1. main.py, change the paths for the data directories to point to your data
-directory (anything with "/aiml/data")
+directory
 
-2. data.py, lines 216, 224, change the folder names of the data input and
+2. data.py, lines 248, 256, change the folder names of the data input and
 output directories to point to your folder names
 '''
 import model
@@ -131,7 +131,7 @@ def main():
                                     is_inference=True)
 
         inference_data_loader = torch.utils.data.DataLoader(inference_dataset, batch_size=1, shuffle=False,
-                                                            num_workers=10)
+                                                            num_workers=6)
 
         '''
         Performs inference on all the images in inference_img_dirpath
@@ -169,12 +169,12 @@ def main():
         testing_dataset = Dataset(data_dict=testing_data_dict, normaliser=1,is_valid=True)
 
         training_data_loader = torch.utils.data.DataLoader(training_dataset, batch_size=1, shuffle=True,
-                                                       num_workers=10)
+                                                       num_workers=6)
         testing_data_loader = torch.utils.data.DataLoader(testing_dataset, batch_size=1, shuffle=False,
-                                                      num_workers=10)
+                                                      num_workers=6)
         validation_data_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=1,
                                                          shuffle=False,
-                                                         num_workers=10)
+                                                         num_workers=6)
         net = model.DeepLPFNet()
         net.cuda(0)
 

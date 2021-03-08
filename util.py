@@ -5,7 +5,7 @@ This is a PyTorch implementation of the CVPR 2020 paper:
 
 Please cite the paper if you use this code
 
-Tested with Pytorch 0.3.1, Python 3.5
+Tested with Pytorch 1.7.1, Python 3.7.9
 
 Authors: Sean Moran (sean.j.moran@gmail.com), 
          Pierre Marza (pierre.marza@gmail.com)
@@ -27,6 +27,7 @@ import datetime
 import math
 import numpy as np
 import copy
+from PIL import Image
 import torch.optim as optim
 import shutil
 import argparse
@@ -155,8 +156,8 @@ class ImageProcessing(object):
         :rtype: multi-dimensional numpy array
 
         """
-        img = ImageProcessing.normalise_image(
-            imread(img_filepath), normaliser)  # NB: imread normalises to 0-1
+        img = ImageProcessing.normalise_image(np.array(Image.open(img_filepath)), normaliser)  # NB: imread normalises to 0-1
+
         return img
 
     @staticmethod
