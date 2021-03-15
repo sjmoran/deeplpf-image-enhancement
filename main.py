@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
+#Copyright (C) 2020. Huawei Technologies Co., Ltd. All rights reserved.
+#This program is free software; you can redistribute it and/or modify it under the terms of the BSD 0-Clause License.
+#This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the BSD 0-Clause License for more details.
 '''
 This is a PyTorch implementation of the CVPR 2020 paper:
 "Deep Local Parametric Filters for Image Enhancement": https://arxiv.org/abs/2003.13985
 
 Please cite the paper if you use this code
 
-Tested with Pytorch 0.3.1, Python 3.5
+Tested with Pytorch 1.7.1, Python 3.7.9
 
 Authors: Sean Moran (sean.j.moran@gmail.com), 
          Pierre Marza (pierre.marza@gmail.com)
@@ -16,9 +19,9 @@ To get this code working on your system / problem you will need to edit the
 data loading functions, as follows:
 
 1. main.py, change the paths for the data directories to point to your data
-directory (anything with "/aiml/data")
+directory
 
-2. data.py, lines 216, 224, change the folder names of the data input and
+2. data.py, lines 248, 256, change the folder names of the data input and
 output directories to point to your folder names
 '''
 import model
