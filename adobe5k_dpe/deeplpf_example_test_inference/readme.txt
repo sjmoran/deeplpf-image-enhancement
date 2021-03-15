@@ -1,1 +1,1 @@
-Enhanced by DeepLPF model: deeplpf_validpsnr_24.19937744358101_validloss_0.0309175793081522_testpsnr_24.521476595705398_testloss_0.029493404552340508_epoch_74_model.pt
+Enhanced by DeepLPF model: deeplpf_validpsnr_23.31_validloss_0.033_testpsnr_23.94_testloss_0.031_epoch_499_model.pt
