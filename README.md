@@ -45,7 +45,7 @@ The directory _pretrained_models_ contains a set of four DeepLPF pre-trained mod
 
 * deeplpf_validpsnr_23.31_validloss_0.033_testpsnr_23.94_testloss_0.031_epoch_499_model.pt
 
-To use this model for inference:
+This model achieves a PSNR of 23.94dB and an SSIM of 0.913 on the Adobe_DPE image dataset. To inference with this model, follow these instructions:
 
 1. Place the images you wish to infer in a directory e.g. ./adobe5k_dpe/deeplpf_example_test_input/. Make sure the directory path has the word "input" somewhere in the path.
 2. Place the images you wish to use as groundtruth in a directory e.g. ./adobe5k_dpe/deeplpf_example_test_output/. Make sure the directory path has the word "output" somewhere in the path.
