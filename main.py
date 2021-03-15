@@ -134,7 +134,7 @@ def main():
                                     is_inference=True)
 
         inference_data_loader = torch.utils.data.DataLoader(inference_dataset, batch_size=1, shuffle=False,
-                                                            num_workers=10)
+                                                            num_workers=6)
 
         '''
         Performs inference on all the images in inference_img_dirpath
@@ -172,12 +172,12 @@ def main():
         testing_dataset = Dataset(data_dict=testing_data_dict, normaliser=1,is_valid=True)
 
         training_data_loader = torch.utils.data.DataLoader(training_dataset, batch_size=1, shuffle=True,
-                                                       num_workers=10)
+                                                       num_workers=6)
         testing_data_loader = torch.utils.data.DataLoader(testing_dataset, batch_size=1, shuffle=False,
-                                                      num_workers=10)
+                                                      num_workers=6)
         validation_data_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=1,
                                                          shuffle=False,
-                                                         num_workers=10)
+                                                         num_workers=6)
         net = model.DeepLPFNet()
         net.cuda(0)
 
