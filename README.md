@@ -41,9 +41,9 @@ python3 main.py
 
 #### Inference - Using Pre-trained Models for Prediction
 
-The directory _pretrained_models_ contains a set of four DeepLPF pre-trained models on the Adobe5K_DPE dataset, each model output from different epochs. The model with the highest validation dataset PSNR (24.40 dB) is at epoch 99:
+The directory _pretrained_models_ contains a set of four DeepLPF pre-trained models on the _Adobe5K_DPE dataset_, each model output from different epochs. The model with the highest validation dataset PSNR (23.94 dB) is at epoch 500:
 
-* deeplpf_validpsnr_24.40217225909678_validloss_0.02979421615600586_testpsnr_24.86015350359045_testloss_0.027900682762265205_epoch_99_model.pt
+* deeplpf_validpsnr_23.31_validloss_0.033_testpsnr_23.94_testloss_0.031_epoch_499_model.pt
 
 To use this model for inference:
 
@@ -53,7 +53,7 @@ To use this model for inference:
 4. Run the command and the results will appear in a timestamped directory in the same directory as main.py:
 
 ```
-python3 main.py --inference_img_dirpath=./adobe5k_dpe/ --checkpoint_filepath=./pretrained_models/deeplpf_validpsnr_24.40217225909678_validloss_0.02979421615600586_testpsnr_24.86015350359045_testloss_0.027900682762265205_epoch_99_model.pt
+python3 main.py --inference_img_dirpath=./adobe5k_dpe/ --checkpoint_filepath=./pretrained_models/deeplpf_validpsnr_23.31_validloss_0.033_testpsnr_23.94_testloss_0.031_epoch_499_model.pt
 ```
 
 ### Bibtex
