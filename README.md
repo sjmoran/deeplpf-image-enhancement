@@ -16,7 +16,7 @@ Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhanc
 <p></p>
 
 <p align="center">
-<img src="./adobe5k_dpe/deeplpf_example_test_inference/a4514-kme_0258_TEST_500_27_PSNR_27.426_SSIM_0.879.jpg" width="80%"/>
+<img src="./images/a514.png" width="80%"/>
 <a href="https://www.youtube.com/watch?v=Sxach3FM6FY" span>
    <img src="./images/youtube-thumbnail.png" width="90%"/>
 </a>
