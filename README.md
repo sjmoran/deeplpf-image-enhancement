@@ -5,7 +5,7 @@
 Huawei Noah's Ark Lab
 
 ### [[Paper]](https://arxiv.org/abs/2003.13985) 
-### [[Poster]](https://arxiv.org/abs/2003.13985) 
+### [[Poster]](https://github.com/sjmoran/sjmoran.github.io/blob/490a37c14e5f59db4e1df5034d8cc57444468d1c/pdfs/DeepLPF_CVPR20_poster.pdf) 
 ### [[Video]](https://www.youtube.com/watch?v=Sxach3FM6FY) 
 ### [[Supplementary]](http://www.seanjmoran.com/pdfs/DeepLPF_supplementary.pdf) 
 
@@ -20,7 +20,7 @@ Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhanc
 <a href="https://www.youtube.com/watch?v=Sxach3FM6FY" span>
    <img src="./images/youtube-thumbnail.png" width="90%"/>
 </a>
-<a href="https://www.cmlab.csie.ntu.edu.tw/project/Deep-Photo-Enhancer/CVPR-2018-DPE-poster-compress.pdf" span>
+<a href="https://github.com/sjmoran/sjmoran.github.io/blob/490a37c14e5f59db4e1df5034d8cc57444468d1c/pdfs/DeepLPF_CVPR20_poster.pdf" span>
    <img src="./images/poster-img.png" width="100%"/>
 </a>
 </p>
