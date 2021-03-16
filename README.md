@@ -72,7 +72,7 @@ Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhanc
   <tr>
     <td><img src="https://github.com/sjmoran/DeepLPF/blob/944e9bfac7ecf7b20b53f1142bf57bf0d2c6bfaf/adobe5k_dpe/deeplpf_example_test_input/a4783-20090321_at_19h16m32__MG_0220.png"/></td>   
      <td><img src="https://github.com/sjmoran/DeepLPF/blob/2e2213fbdf07f890e22c40ef2ee31c7cafe98679/adobe5k_dpe/deeplpf_example_test_output/a4514-kme_0258.png"/></td>     
-     <td><img src="https://github.com/sjmoran/DeepLPF/blob/f8b20f0a102c549f716748a3d5e353c48a24d768/adobe5k_dpe/deeplpf_example_test_inference/a4783-20090321_at_19h16m32__MG_0220_TEST_500_2_PSNR_26.362_SSIM_0.905.jpg"/></td> 
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/2e2213fbdf07f890e22c40ef2ee31c7cafe98679/adobe5k_dpe/deeplpf_example_test_inference/a4514-kme_0258_TEST_500_27_PSNR_27.426_SSIM_0.879.jpg"/></td> 
   </tr>
 </table>
 
