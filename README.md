@@ -52,7 +52,7 @@ Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhanc
   </tr>
 </table>
 
-### Requirements
+### Dependencies
 
 _requirements.txt_ contains the Python packages used by the code.
 
