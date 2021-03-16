@@ -16,7 +16,6 @@ Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhanc
 ### [[Supplementary]](http://www.seanjmoran.com/pdfs/DeepLPF_supplementary.pdf) 
 
 <p align="center">
-<img src="./images/a4514.png" width="80%"/>
 <a href="https://www.youtube.com/watch?v=Sxach3FM6FY" span>
    <img src="./images/youtube-thumbnail.png" width="90%"/>
 </a>
@@ -24,6 +23,49 @@ Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhanc
    <img src="./images/poster-img.png" width="100%"/>
 </a>
 </p>
+
+<table>
+  <tr>
+    <th>Input</th>
+    <th>Label</th>
+    <th>Ours</th>
+  </tr>
+  <tr>
+    <td><img src="./images/MIT498/Input/a3552.png"/></td>
+    <td><img src="./images/MIT498/Label/a3552.png"/></td>
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/7b5e10962cead0b0c20e47f7a0c750562f7bfc74/adobe5k_dpe/deeplpf_example_test_inference/a4521-kme_0310_TEST_800_5_PSNR_28.774_SSIM_0.897.jpg"/></td> 
+  </tr>
+  <tr>
+    <th>Our (SL)</th>
+    <th>Our (UL)</th>
+    <th>CycleGAN (HDR)</th>
+  </tr>
+  <tr>
+    <td><img src="./images/MIT498/Our_SL/a3552.png"/></td>
+    <td><img src="./images/MIT498/Our_UL/a3552.png"/></td>
+    <td><img src="./images/MIT498/CycleGAN_HDR/a3552.png"/></td>
+  </tr>
+  <tr>
+    <th>DPED_iPhone6</th> 
+    <th>DPED_iPhone7</th>
+    <th>DPED_Nexus5x</th>
+  </tr>
+  <tr>
+    <td><img src="./images/MIT498/DPED_iPhone6/a3552.png"/></td> 
+    <td><img src="./images/MIT498/DPED_iPhone7/a3552.png"/></td>
+    <td><img src="./images/MIT498/DPED_Nexus5x/a3552.png"/></td>
+  </tr>
+  <tr>
+    <th>CLHE</th> 
+    <th>NPEA</th>
+    <th>FLLF</th>
+  </tr>
+  <tr>
+    <td><img src="./images/MIT498/CLHE/a3552.png"/></td> 
+    <td><img src="./images/MIT498/NPEA/a3552.png"/></td>
+    <td><img src="./images/MIT498/FLLF/a3552.png"/></td>
+  </tr>
+</table>
 
 ### Requirements
 
