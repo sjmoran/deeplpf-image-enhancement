@@ -4,19 +4,19 @@
 
 Huawei Noah's Ark Lab
 
-### [[Paper]](https://arxiv.org/abs/2003.13985) 
-### [[Poster]](https://github.com/sjmoran/sjmoran.github.io/blob/490a37c14e5f59db4e1df5034d8cc57444468d1c/pdfs/DeepLPF_CVPR20_poster.pdf) 
-### [[Video]](https://www.youtube.com/watch?v=Sxach3FM6FY) 
-### [[Supplementary]](http://www.seanjmoran.com/pdfs/DeepLPF_supplementary.pdf) 
-
 <p align="center">
 <img src="./images/teaser.png" width="80%"/>
 </p>
 Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhancement. Here you will find a link to the code and information on the datasets. Please raise a Github issue if you need assistance of have any questions on the research. 
 <p></p>
 
+### [[Paper]](https://arxiv.org/abs/2003.13985) 
+### [[Poster]](https://github.com/sjmoran/sjmoran.github.io/blob/490a37c14e5f59db4e1df5034d8cc57444468d1c/pdfs/DeepLPF_CVPR20_poster.pdf) 
+### [[Video]](https://www.youtube.com/watch?v=Sxach3FM6FY) 
+### [[Supplementary]](http://www.seanjmoran.com/pdfs/DeepLPF_supplementary.pdf) 
+
 <p align="center">
-<img src="./images/a514.png" width="80%"/>
+<img src="./images/a4514.png" width="80%"/>
 <a href="https://www.youtube.com/watch?v=Sxach3FM6FY" span>
    <img src="./images/youtube-thumbnail.png" width="90%"/>
 </a>
