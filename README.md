@@ -31,39 +31,24 @@ Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhanc
     <th>Ours (DeepLPF)</th>
   </tr>
   <tr>
-    <td><img src="https://github.com/sjmoran/DeepLPF/blob/7ee48c6cf43cdd252e03a81d47107836e3fe3926/adobe5k_dpe/deeplpf_example_test_input/a4521-kme_0310.tif"/></td>
-    <td><img src="https://github.com/sjmoran/DeepLPF/blob/7ee48c6cf43cdd252e03a81d47107836e3fe3926/adobe5k_dpe/deeplpf_example_test_input/a4521-kme_0310.tif"/></td>
+      <td><img src="https://github.com/sjmoran/DeepLPF/blob/7b5e10962cead0b0c20e47f7a0c750562f7bfc74/adobe5k_dpe/deeplpf_example_test_inference/a4521-kme_0310_TEST_800_5_PSNR_28.774_SSIM_0.897.jpg"/></td>     <td><img src="https://github.com/sjmoran/DeepLPF/blob/7b5e10962cead0b0c20e47f7a0c750562f7bfc74/adobe5k_dpe/deeplpf_example_test_inference/a4521-kme_0310_TEST_800_5_PSNR_28.774_SSIM_0.897.jpg"/></td> 
     <td><img src="https://github.com/sjmoran/DeepLPF/blob/7b5e10962cead0b0c20e47f7a0c750562f7bfc74/adobe5k_dpe/deeplpf_example_test_inference/a4521-kme_0310_TEST_800_5_PSNR_28.774_SSIM_0.897.jpg"/></td> 
   </tr>
   <tr>
-    <th>Our (SL)</th>
-    <th>Our (UL)</th>
-    <th>CycleGAN (HDR)</th>
+    <th>Input</th>
+    <th>Label</th>
+    <th>Ours (DeepLPF)</th>
   </tr>
   <tr>
-    <td><img src="./images/MIT498/Our_SL/a3552.png"/></td>
-    <td><img src="./images/MIT498/Our_UL/a3552.png"/></td>
-    <td><img src="./images/MIT498/CycleGAN_HDR/a3552.png"/></td>
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/7b5e10962cead0b0c20e47f7a0c750562f7bfc74/adobe5k_dpe/deeplpf_example_test_inference/a4521-kme_0310_TEST_800_5_PSNR_28.774_SSIM_0.897.jpg"/></td>     <td><img src="https://github.com/sjmoran/DeepLPF/blob/7b5e10962cead0b0c20e47f7a0c750562f7bfc74/adobe5k_dpe/deeplpf_example_test_inference/a4521-kme_0310_TEST_800_5_PSNR_28.774_SSIM_0.897.jpg"/></td>     <td><img src="https://github.com/sjmoran/DeepLPF/blob/7b5e10962cead0b0c20e47f7a0c750562f7bfc74/adobe5k_dpe/deeplpf_example_test_inference/a4521-kme_0310_TEST_800_5_PSNR_28.774_SSIM_0.897.jpg"/></td> 
   </tr>
   <tr>
-    <th>DPED_iPhone6</th> 
-    <th>DPED_iPhone7</th>
-    <th>DPED_Nexus5x</th>
+    <th>Input/th> 
+    <th>Label</th>
+    <th>Ours (DeepLPF)</th>
   </tr>
   <tr>
-    <td><img src="./images/MIT498/DPED_iPhone6/a3552.png"/></td> 
-    <td><img src="./images/MIT498/DPED_iPhone7/a3552.png"/></td>
-    <td><img src="./images/MIT498/DPED_Nexus5x/a3552.png"/></td>
-  </tr>
-  <tr>
-    <th>CLHE</th> 
-    <th>NPEA</th>
-    <th>FLLF</th>
-  </tr>
-  <tr>
-    <td><img src="./images/MIT498/CLHE/a3552.png"/></td> 
-    <td><img src="./images/MIT498/NPEA/a3552.png"/></td>
-    <td><img src="./images/MIT498/FLLF/a3552.png"/></td>
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/7b5e10962cead0b0c20e47f7a0c750562f7bfc74/adobe5k_dpe/deeplpf_example_test_inference/a4521-kme_0310_TEST_800_5_PSNR_28.774_SSIM_0.897.jpg"/></td>     <td><img src="https://github.com/sjmoran/DeepLPF/blob/7b5e10962cead0b0c20e47f7a0c750562f7bfc74/adobe5k_dpe/deeplpf_example_test_inference/a4521-kme_0310_TEST_800_5_PSNR_28.774_SSIM_0.897.jpg"/></td>     <td><img src="https://github.com/sjmoran/DeepLPF/blob/7b5e10962cead0b0c20e47f7a0c750562f7bfc74/adobe5k_dpe/deeplpf_example_test_inference/a4521-kme_0310_TEST_800_5_PSNR_28.774_SSIM_0.897.jpg"/></td> 
   </tr>
 </table>
 
