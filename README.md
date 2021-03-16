@@ -4,7 +4,7 @@
 
 **Huawei Noah's Ark Lab**
 
-<p>Main repository for the CVPR 2020 paper **DeepLPF: Deep Local Parametric Filters for Image Enhancement**. Here you will find a link to the code, pre-trained models and information on the datasets. Please raise a Github issue if you need assistance of have any questions on the research. 
+<p>Main repository for the CVPR 2020 paper <b>DeepLPF: Deep Local Parametric Filters for Image Enhancement</b>. Here you will find a link to the code, pre-trained models and information on the datasets. Please raise a Github issue if you need assistance of have any questions on the research. 
 </p>
 
 <p align="center">
