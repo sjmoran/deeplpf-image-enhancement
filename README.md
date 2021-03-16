@@ -5,6 +5,7 @@
 Huawei Noah's Ark Lab
 
 ### [[Paper]](https://arxiv.org/abs/2003.13985) 
+### [[Poster]](https://arxiv.org/abs/2003.13985) 
 ### [[Video]](https://www.youtube.com/watch?v=Sxach3FM6FY) 
 ### [[Supplementary]](http://www.seanjmoran.com/pdfs/DeepLPF_supplementary.pdf) 
 
@@ -13,6 +14,16 @@ Huawei Noah's Ark Lab
 </p>
 Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhancement. Here you will find a link to the code and information on the datasets. Please raise a Github issue if you need assistance of have any questions on the research. 
 <p></p>
+
+<p align="center">
+<img src="./adobe5k_dpe/deeplpf_example_test_inference/a4514-kme_0258_TEST_500_27_PSNR_27.426_SSIM_0.879.jpg" width="80%"/>
+<a href="https://www.youtube.com/watch?v=Sxach3FM6FY" span>
+   <img src="./images/youtube-thumbnail.png" width="90%"/>
+</a>
+<a href="https://www.cmlab.csie.ntu.edu.tw/project/Deep-Photo-Enhancer/CVPR-2018-DPE-poster-compress.pdf" span>
+   <img src="./images/poster-img.png" width="100%"/>
+</a>
+</p>
 
 ### Requirements
 
