@@ -54,7 +54,17 @@ Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhanc
     <td><img src="https://github.com/sjmoran/DeepLPF/blob/6202bcdb89f37ade82bbafcf64a46b3d49e68c15/adobe5k_dpe/deeplpf_example_test_input/a4933-Duggan_090428_8040.png"/></td>     
      <td><img src="https://github.com/sjmoran/DeepLPF/blob/40bceb27866af7a47e3523381af392820bf5a49c/adobe5k_dpe/deeplpf_example_test_output/a4933-Duggan_090428_8040.png"/></td>     <td><img src="https://github.com/sjmoran/DeepLPF/blob/7745ebfb35fc9a6c8e27bbc09c4b82c94a77e632/adobe5k_dpe/deeplpf_example_test_inference/a4933-Duggan_090428_8040_TEST_500_23_PSNR_19.011_SSIM_0.882.jpg"/></td> 
   </tr>
+     <tr>
+    <th>Input</th> 
+    <th>Label</th>
+    <th>Ours (DeepLPF)</th>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/6202bcdb89f37ade82bbafcf64a46b3d49e68c15/adobe5k_dpe/deeplpf_example_test_input/a4933-Duggan_090428_8040.png"/></td>   
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/40bceb27866af7a47e3523381af392820bf5a49c/adobe5k_dpe/deeplpf_example_test_output/a4933-Duggan_090428_8040.png"/></td>     <td><img src="https://github.com/sjmoran/DeepLPF/blob/f8b20f0a102c549f716748a3d5e353c48a24d768/adobe5k_dpe/deeplpf_example_test_inference/a4783-20090321_at_19h16m32__MG_0220_TEST_500_2_PSNR_26.362_SSIM_0.905.jpg"/></td> 
+  </tr>
 </table>
+
 
 ### Dependencies
 
