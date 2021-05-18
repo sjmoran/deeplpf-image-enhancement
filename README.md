@@ -11,13 +11,13 @@
 <img src="./images/teaser.png" width="80%"/>
 </p>
 
-### [[Paper]](https://arxiv.org/abs/2003.13985) [[Poster]](https://github.com/sjmoran/sjmoran.github.io/blob/490a37c14e5f59db4e1df5034d8cc57444468d1c/pdfs/DeepLPF_CVPR20_poster.pdf) [[Video]](https://www.youtube.com/watch?v=Sxach3FM6FY) [[Supplementary]](https://github.com/sjmoran/sjmoran.github.io/blob/7775d1fc39d14baeb6935f6c750f923e1251f491/pdfs/DeepLPF_supplementary.pdf) 
+### [[Paper]](https://arxiv.org/abs/2003.13985) [[Poster]](https://github.com/sjmoran/sjmoran.github.io/blob/main/pdfs/DeepLPF_CVPR20_poster.pdf) [[Video]](https://www.youtube.com/watch?v=Sxach3FM6FY) [[Supplementary]](https://github.com/sjmoran/sjmoran.github.io/blob/7775d1fc39d14baeb6935f6c750f923e1251f491/pdfs/DeepLPF_supplementary.pdf) 
 
 <p align="center">
 <a href="https://www.youtube.com/watch?v=Sxach3FM6FY" span>
    <img src="./images/youtube-thumbnail.png" width="90%"/>
 </a>
-<a href="https://github.com/sjmoran/sjmoran.github.io/blob/490a37c14e5f59db4e1df5034d8cc57444468d1c/pdfs/DeepLPF_CVPR20_poster.pdf" span>
+<a href="https://github.com/sjmoran/sjmoran.github.io/blob/main/pdfs/DeepLPF_CVPR20_poster.pdf" span>
    <img src="./images/poster-img.png" width="100%"/>
 </a>
 </p>
