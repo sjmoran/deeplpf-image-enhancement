@@ -26,8 +26,7 @@ Instructions:
 
 To get this code working on your system / problem you will need to edit the data loading functions, as follows:
 
-1. main.py, change the paths for the data directories to point to your data directory
-2. data.py, lines 248, 256, change the folder names of the data input and output directories to point to your folder names
+1. data.py, lines 248, 256, change the folder names of the data input and output directories to point to your folder names
 
 To train, run the command:
 
@@ -43,9 +42,9 @@ python3 main.py --training_img_dirpath=../adobe5k/ --train_img_list_path=../adob
 
 The directory _pretrained_models_ contains a set of four DeepLPF pre-trained models on the _Adobe5K_DPE dataset_, each model output from different epochs. The model with the highest validation dataset PSNR (23.94 dB) is at epoch 500:
 
-* deeplpf_validpsnr_23.31_validloss_0.033_testpsnr_23.94_testloss_0.031_epoch_499_model.pt
+* deeplpf_validpsnr_23.378_validloss_0.033_testpsnr_23.904_testloss_0.031_epoch_424_model.pt
 
-This model achieves a PSNR of 23.94dB and an SSIM of 0.913 on the Adobe_DPE image dataset. To inference with this model, follow these instructions:
+This model achieves a PSNR of 23.90dB and an SSIM of 0.911 on the Adobe_DPE image dataset. To inference with this model, follow these instructions:
 
 1. Place the images you wish to infer in a directory e.g. ./adobe5k_dpe/deeplpf_example_test_input/. Make sure the directory path has the word "input" somewhere in the path.
 2. Place the images you wish to use as groundtruth in a directory e.g. ./adobe5k_dpe/deeplpf_example_test_output/. Make sure the directory path has the word "output" somewhere in the path.
