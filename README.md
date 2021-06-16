@@ -11,7 +11,7 @@ Huawei Noah's Ark Lab
 <p align="center">
 <img src="./images/teaser.png" width="80%"/>
 </p>
-Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhancement. Here you will find a link to the code and information on the datasets. Please raise a Github issue if you need assistance of have any questions on the research. 
+Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhancement. In this repository you will find a link to the code and information on the datasets. Please raise a Github issue if you need assistance of have any questions on the research. 
 <p></p>
 
 ### Requirements
