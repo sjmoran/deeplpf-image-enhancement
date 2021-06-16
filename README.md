@@ -2,19 +2,79 @@
 
 [Sean Moran](http://www.seanjmoran.com), [Pierre Marza](https://scholar.google.com/citations?user=NAI5mi4AAAAJ&hl=en), [Steven McDonagh](https://smcdonagh.github.io/), [Sarah Parisot](https://parisots.github.io/), [Greg Slabaugh](http://gregslabaugh.net/)
 
-Huawei Noah's Ark Lab
+**Huawei Noah's Ark Lab**
 
-### [[Paper]](https://arxiv.org/abs/2003.13985) 
-### [[Video]](https://www.youtube.com/watch?v=Sxach3FM6FY) 
-### [[Supplementary]](http://www.seanjmoran.com/pdfs/DeepLPF_supplementary.pdf) 
+<p>Main repository for the CVPR 2020 paper <b>DeepLPF: Deep Local Parametric Filters for Image Enhancement</b>. Here you will find a link to the code, pre-trained models and information on the datasets. Please raise a Github issue if you need assistance of have any questions on the research. 
+</p>
 
 <p align="center">
 <img src="./images/teaser.png" width="80%"/>
 </p>
-Repository for the paper DeepLPF: Deep Local Parametric Filters for Image Enhancement. In this repository you will find a link to the code and information on the datasets. Please raise a Github issue if you need assistance of have any questions on the research. 
-<p></p>
 
-### Requirements
+### [[Paper]](https://arxiv.org/abs/2003.13985) [[Poster]](https://github.com/sjmoran/sjmoran.github.io/blob/main/pdfs/DeepLPF_CVPR20_poster.pdf) [[Video]](https://www.youtube.com/watch?v=Sxach3FM6FY) [[Supplementary]](https://github.com/sjmoran/sjmoran.github.io/blob/7775d1fc39d14baeb6935f6c750f923e1251f491/pdfs/DeepLPF_supplementary.pdf) 
+
+<p align="center">
+<a href="https://www.youtube.com/watch?v=Sxach3FM6FY" span>
+   <img src="./images/youtube-thumbnail.png" width="90%"/>
+</a>
+<a href="https://github.com/sjmoran/sjmoran.github.io/blob/main/pdfs/DeepLPF_CVPR20_poster.pdf" span>
+   <img src="./images/poster-img.png" width="100%"/>
+</a>
+</p>
+
+<table>
+  <tr>
+    <th>Input</th>
+    <th>Label</th>
+    <th>Ours (DeepLPF)</th>
+  </tr>
+  <tr>
+      <td><img src="https://github.com/sjmoran/DeepLPF/blob/b614871bb72a6573cd45fc487f5ad2d5e7e6edda/adobe5k_dpe/deeplpf_example_test_input/a4521-kme_0310.png"/></td>     
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/9404949f046a53b87a04ecc17583d0fa01951176/adobe5k_dpe/deeplpf_example_test_output/a4521-kme_0310.png"/></td> 
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/7b5e10962cead0b0c20e47f7a0c750562f7bfc74/adobe5k_dpe/deeplpf_example_test_inference/a4521-kme_0310_TEST_800_5_PSNR_28.774_SSIM_0.897.jpg"/></td> 
+  </tr>
+  <tr>
+    <th>Input</th>
+    <th>Label</th>
+    <th>Ours (DeepLPF)</th>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/76bbc1d5673cf0c90c7316d93fecefa9b5a62052/adobe5k_dpe/deeplpf_example_test_input/a4869-09-05-19-at-19h05m38s-_MG_9563.png"/></td>     
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/62d12eff53e30382553f75c32743596a7919deba/adobe5k_dpe/deeplpf_example_test_output/a4869-09-05-19-at-19h05m38s-_MG_9563.png"/></td>     
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/c75cea3d600136005ea1078db3fc663011c54d8b/adobe5k_dpe/deeplpf_example_test_inference/a4869-09-05-19-at-19h05m38s-_MG_9563_TEST_500_29_PSNR_30.090_SSIM_0.978.jpg"/></td> 
+  </tr>
+  <tr>
+    <th>Input</th> 
+    <th>Label</th>
+    <th>Ours (DeepLPF)</th>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/c50fa517cbeb88ace1970b54da712e7872fbd95f/adobe5k_dpe/deeplpf_example_test_input/a4933-Duggan_090428_8040.png"/></td>   
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/86a9b78ff36d3f71d491a158fd7956b5880cd991/adobe5k_dpe/deeplpf_example_test_output/a4933-Duggan_090428_8040.png"/></td>     <td><img src="https://github.com/sjmoran/DeepLPF/blob/7745ebfb35fc9a6c8e27bbc09c4b82c94a77e632/adobe5k_dpe/deeplpf_example_test_inference/a4933-Duggan_090428_8040_TEST_500_23_PSNR_19.011_SSIM_0.882.jpg"/></td> 
+  </tr>
+     <tr>
+    <th>Input</th> 
+    <th>Label</th>
+    <th>Ours (DeepLPF)</th>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/944e9bfac7ecf7b20b53f1142bf57bf0d2c6bfaf/adobe5k_dpe/deeplpf_example_test_input/a4783-20090321_at_19h16m32__MG_0220.png"/></td>   
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/4b5448fc529f9f5f71d117ad6fb54215ae2164c8/adobe5k_dpe/deeplpf_example_test_output/a4783-20090321_at_19h16m32__MG_0220.png"/></td>     
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/f8b20f0a102c549f716748a3d5e353c48a24d768/adobe5k_dpe/deeplpf_example_test_inference/a4783-20090321_at_19h16m32__MG_0220_TEST_500_2_PSNR_26.362_SSIM_0.905.jpg"/></td> 
+  </tr>
+        <tr>
+    <th>Input</th> 
+    <th>Label</th>
+    <th>Ours (DeepLPF)</th>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/fc339bc7177aad138cdd7b3378056b97e6b5afc9/adobe5k_dpe/deeplpf_example_test_input/a4514-kme_0258.png"/></td>   
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/2e2213fbdf07f890e22c40ef2ee31c7cafe98679/adobe5k_dpe/deeplpf_example_test_output/a4514-kme_0258.png"/></td>     
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/2e2213fbdf07f890e22c40ef2ee31c7cafe98679/adobe5k_dpe/deeplpf_example_test_inference/a4514-kme_0258_TEST_500_27_PSNR_27.426_SSIM_0.879.jpg"/></td> 
+  </tr>
+</table>
+
+### Dependencies
 
 _requirements.txt_ contains the Python packages used by the code.
 
@@ -40,7 +100,7 @@ python3 main.py --training_img_dirpath=../adobe5k/ --train_img_list_path=../adob
 
 #### Inference - Using Pre-trained Models for Prediction
 
-The directory _pretrained_models_ contains a set of four DeepLPF pre-trained models on the _Adobe5K_DPE dataset_, each model output from different epochs. The model with the highest validation dataset PSNR (23.94 dB) is at epoch 500:
+The directory _pretrained_models_ contains a set of four DeepLPF pre-trained models on the _Adobe5K_DPE dataset_, each model output from different epochs. The model with the highest validation dataset PSNR (23.90 dB) is at epoch 424:
 
 * deeplpf_validpsnr_23.378_validloss_0.033_testpsnr_23.904_testloss_0.031_epoch_424_model.pt
 
@@ -52,7 +112,7 @@ This model achieves a PSNR of 23.90dB and an SSIM of 0.911 on the Adobe_DPE imag
 4. Run the command and the results will appear in a timestamped directory in the same directory as main.py:
 
 ```
-python3 main.py --inference_img_dirpath=./adobe5k_dpe/ --checkpoint_filepath=./pretrained_models/deeplpf_validpsnr_23.378_validloss_0.033_testpsnr_23.904_testloss_0.031_epoch_424_model.pt
+python3 main.py --inference_img_dirpath=./adobe5k_dpe/ --checkpoint_filepath=./pretrained_models/adobe_dpe/deeplpf_validpsnr_23.378_validloss_0.033_testpsnr_23.904_testloss_0.031_epoch_424_model.pt
 ```
 
 ### Bibtex
