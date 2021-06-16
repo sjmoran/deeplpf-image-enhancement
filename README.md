@@ -32,7 +32,7 @@ To get this code working on your system / problem you will need to edit the data
 To train, run the command:
 
 ```
-python3 main.py
+python3 main.py --training_img_dirpath=../adobe5k/ --train_img_list_path=../adobe5k/images_train.txt --valid_img_list_path=../adobe5k/images_valid.txt --test_img_list_path=../adobe5k/images_test.txt
 ```
 
 <p align="center">
