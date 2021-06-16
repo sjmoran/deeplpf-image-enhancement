@@ -1,6 +1,6 @@
 # DeepLPF: Deep Local Parametric Filters for Image Enhancement (CVPR 2020)
 
-[Sean Moran](http://www.seanjmoran.com), Pierre Marza, [Steven McDonagh](https://smcdonagh.github.io/), [Sarah Parisot](https://parisots.github.io/), [Greg Slabaugh](http://gregslabaugh.net/)
+[Sean Moran](http://www.seanjmoran.com), [Pierre Marza](https://scholar.google.com/citations?user=NAI5mi4AAAAJ&hl=en), [Steven McDonagh](https://smcdonagh.github.io/), [Sarah Parisot](https://parisots.github.io/), [Greg Slabaugh](http://gregslabaugh.net/)
 
 Huawei Noah's Ark Lab
 
