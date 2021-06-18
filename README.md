@@ -23,6 +23,16 @@
 </p>
 
 <table>
+    <tr>
+    <th>Input</th>
+    <th>Label</th>
+    <th>Ours (DeepLPF)</th>
+  </tr>
+  <tr>
+      <td><img src="https://github.com/sjmoran/DeepLPF/blob/b614871bb72a6573cd45fc487f5ad2d5e7e6edda/adobe5k_dpe/deeplpf_example_test_input/a4591-Duggan_080411_5940.png"/></td>     
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/9404949f046a53b87a04ecc17583d0fa01951176/adobe5k_dpe/deeplpf_example_test_output/a4591-Duggan_080411_5940.tif_GT.png"/></td> 
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/7b5e10962cead0b0c20e47f7a0c750562f7bfc74/adobe5k_dpe/deeplpf_example_test_inference/a4591-Duggan_080411_5940_TEST_425_20_PSNR_28.000_SSIM_0.951.jpg"/></td> 
+  </tr>
   <tr>
     <th>Input</th>
     <th>Label</th>
