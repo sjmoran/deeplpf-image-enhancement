@@ -29,7 +29,7 @@
     <th>Ours (DeepLPF)</th>
   </tr>
   <tr>
-      <td><img src="https://github.com/sjmoran/DeepLPF/blob/7b6ffc8d37d26a29742c0487e94c2e00617ab149/adobe5k_dpe/deeplpf_example_test_input/a4582-DSC_0343_input.png"/></td>   
+      <td><img src="https://github.com/sjmoran/DeepLPF/blob/e6d160eed2a5f72c89e690bc81f1a59f09873085/adobe5k_dpe/deeplpf_example_test_input/a4576-DSC_0217_input.png"/></td>   
      <td><img src="https://github.com/sjmoran/DeepLPF/blob/ff8c04db5da40e6c58f8ff42417ab57d28605d85/adobe5k_dpe/deeplpf_example_test_output/a4582-DSC_0343_gt.png"/></td> 
     <td><img src="https://github.com/sjmoran/DeepLPF/blob/1a76a93d5cb1fffbb8865193ba37ef83771e1f2d/adobe5k_dpe/deeplpf_example_test_inference/a4576-DSC_0217_TEST_425_9_PSNR_34.596_SSIM_0.980.jpg"/></td> 
   </tr>
