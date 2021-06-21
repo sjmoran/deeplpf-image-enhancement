@@ -39,6 +39,16 @@
     <th>Ours (DeepLPF)</th>
   </tr>
   <tr>
+      <td><img src="https://github.com/sjmoran/DeepLPF/blob/3247d4dedce32aeaad54586d2c0b478189ed8d82/adobe5k_dpe/deeplpf_example_test_input/a4774-_DGW0330.png"/></td>     
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/28d9bfad7bf3649b25aa6c69dd25226474fd8339/adobe5k_dpe/deeplpf_example_test_output/a4774-_DGW0330_gt.png"/></td> 
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/37d2a682f2b0970fc0d3fd0c30d8512d909737b5/adobe5k_dpe/deeplpf_example_test_inference/a4774-_DGW0330_TEST_425_7_PSNR_24.233_SSIM_0.926.jpg"/></td> 
+  </tr>
+    <tr>
+    <th>Input</th>
+    <th>Label</th>
+    <th>Ours (DeepLPF)</th>
+  </tr>
+  <tr>
       <td><img src="https://github.com/sjmoran/DeepLPF/blob/33b02f2a6f1d079e0a2b6b025f576f5b1f3c8ac7/adobe5k_dpe/deeplpf_example_test_input/a4591-Duggan_080411_5940.png"/></td>     
      <td><img src="https://github.com/sjmoran/DeepLPF/blob/10c985c9f69cf1bb541517e14624dcdc923e2b78/adobe5k_dpe/deeplpf_example_test_output/a4591-Duggan_080411_5940.tif_GT.png"/></td> 
     <td><img src="https://github.com/sjmoran/DeepLPF/blob/c46645adbc897ea6e773fed729b2d99d5bf59dcc/adobe5k_dpe/deeplpf_example_test_inference/a4591-Duggan_080411_5940_TEST_425_20_PSNR_28.000_SSIM_0.951.jpg"/></td> 
