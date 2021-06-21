@@ -30,7 +30,7 @@
   </tr>
   <tr>
       <td><img src="https://github.com/sjmoran/DeepLPF/blob/ff2a4a6ac30a247f10c5ee2ebb96d1982725570b/adobe5k_dpe/deeplpf_example_test_input/a4742-Duggan_090331_6517_input.png"/></td>     
-     <td><img src="https://github.com/sjmoran/DeepLPF/blob/24ae58aaed19e76a59788edd04997d537bc624df/adobe5k_dpe/deeplpf_example_test_output/a4742-Duggan_090331_6517_output.png"/></td> 
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/ff8c04db5da40e6c58f8ff42417ab57d28605d85/adobe5k_dpe/deeplpf_example_test_output/a4582-DSC_0343_gt.png"/></td> 
     <td><img src="https://github.com/sjmoran/DeepLPF/blob/094ae4b23e0586a588960cbc31c95e09eb3f2997/adobe5k_dpe/deeplpf_example_test_inference/a4582-DSC_0343_TEST_425_10_PSNR_18.942_SSIM_0.921.jpg"/></td> 
   </tr>
     <tr>
