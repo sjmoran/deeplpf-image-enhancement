@@ -168,7 +168,7 @@ python3 main.py --inference_img_dirpath=./adobe5k_dpe/ --checkpoint_filepath=./p
 ### Pre-trained models
 
 * Adobe-DPE: see pretrained_models/adobe_dpe directory. Model trained on the Adobe5K dataset using the splits and image pre-processing outlined in the DeepPhotoEnhancer paper.
-* Adobe-UPE: see pretrained_models/adobe_upe directory. Model trained on the Adobe5K dataset using the splits and image pre-processing outlined in the DeepUPE paper. Thanks to Yucheng Lu (yucheng.l@outlook.com) for this pre-trained model. The model was applined in [this paper](https://arxiv.org/abs/2106.14844).
+* Adobe-UPE: see pretrained_models/adobe_upe directory. Model trained on the Adobe5K dataset using the splits and image pre-processing outlined in the DeepUPE paper. Thanks to Yucheng Lu (yucheng.l@outlook.com) for this pre-trained model. The model was applied in [this paper](https://arxiv.org/abs/2106.14844).
 
 ### Bibtex
 
