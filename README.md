@@ -29,9 +29,9 @@
     <th>Ours (DeepLPF)</th>
   </tr>
   <tr>
-      <td><img src="https://github.com/sjmoran/DeepLPF/blob/e6d160eed2a5f72c89e690bc81f1a59f09873085/adobe5k_dpe/deeplpf_example_test_input/a4576-DSC_0217_input.png" width="300" height="200"/></td>   
-     <td><img src="https://github.com/sjmoran/DeepLPF/blob/6889bd2c39a947ba85d86b6151387dfe56709996/adobe5k_dpe/deeplpf_example_test_output/a4576-DSC_0217_gt.png" width="300" height="200"/></td> 
-    <td><img src="https://github.com/sjmoran/DeepLPF/blob/1a76a93d5cb1fffbb8865193ba37ef83771e1f2d/adobe5k_dpe/deeplpf_example_test_inference/a4576-DSC_0217_TEST_425_9_PSNR_34.596_SSIM_0.980.jpg" width="300" height="200"/></td> 
+      <td><img src="https://github.com/sjmoran/DeepLPF/blob/e6d160eed2a5f72c89e690bc81f1a59f09873085/adobe5k_dpe/deeplpf_example_test_input/a4576-DSC_0217_input.png" /></td>   
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/6889bd2c39a947ba85d86b6151387dfe56709996/adobe5k_dpe/deeplpf_example_test_output/a4576-DSC_0217_gt.png" /></td> 
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/1a76a93d5cb1fffbb8865193ba37ef83771e1f2d/adobe5k_dpe/deeplpf_example_test_inference/a4576-DSC_0217_TEST_425_9_PSNR_34.596_SSIM_0.980.jpg"/></td> 
   </tr>
     <tr>
     <th>Input</th>
@@ -39,9 +39,9 @@
     <th>Ours (DeepLPF)</th>
   </tr>
   <tr>
-      <td><img src="https://github.com/sjmoran/DeepLPF/blob/7b6ffc8d37d26a29742c0487e94c2e00617ab149/adobe5k_dpe/deeplpf_example_test_input/a4582-DSC_0343_input.png" width="400" height="200"/></td>   
-     <td><img src="https://github.com/sjmoran/DeepLPF/blob/ff8c04db5da40e6c58f8ff42417ab57d28605d85/adobe5k_dpe/deeplpf_example_test_output/a4582-DSC_0343_gt.png" width="400" height="200"/></td> 
-    <td><img src="https://github.com/sjmoran/DeepLPF/blob/094ae4b23e0586a588960cbc31c95e09eb3f2997/adobe5k_dpe/deeplpf_example_test_inference/a4582-DSC_0343_TEST_425_10_PSNR_18.942_SSIM_0.921.jpg" width="300" height="200"/></td> 
+      <td><img src="https://github.com/sjmoran/DeepLPF/blob/7b6ffc8d37d26a29742c0487e94c2e00617ab149/adobe5k_dpe/deeplpf_example_test_input/a4582-DSC_0343_input.png"/></td>   
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/ff8c04db5da40e6c58f8ff42417ab57d28605d85/adobe5k_dpe/deeplpf_example_test_output/a4582-DSC_0343_gt.png"/></td> 
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/094ae4b23e0586a588960cbc31c95e09eb3f2997/adobe5k_dpe/deeplpf_example_test_inference/a4582-DSC_0343_TEST_425_10_PSNR_18.942_SSIM_0.921.jpg"/></td> 
   </tr>
     <tr>
     <th>Input</th>
@@ -49,9 +49,9 @@
     <th>Ours (DeepLPF)</th>
   </tr>
   <tr>
-      <td><img src="https://github.com/sjmoran/DeepLPF/blob/ff2a4a6ac30a247f10c5ee2ebb96d1982725570b/adobe5k_dpe/deeplpf_example_test_input/a4742-Duggan_090331_6517_input.png" width="400" height="200"/></td>     
-     <td><img src="https://github.com/sjmoran/DeepLPF/blob/24ae58aaed19e76a59788edd04997d537bc624df/adobe5k_dpe/deeplpf_example_test_output/a4742-Duggan_090331_6517_output.png" width="400" height="200"/></td> 
-    <td><img src="https://github.com/sjmoran/DeepLPF/blob/a1f98969249067e89137b06fe82c71d44485cd4f/adobe5k_dpe/deeplpf_example_test_inference/a4742-Duggan_090331_6517_TEST_425_1_PSNR_29.825_SSIM_0.984.jpg" width="400" height="200"/></td> 
+      <td><img src="https://github.com/sjmoran/DeepLPF/blob/ff2a4a6ac30a247f10c5ee2ebb96d1982725570b/adobe5k_dpe/deeplpf_example_test_input/a4742-Duggan_090331_6517_input.png"/></td>     
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/24ae58aaed19e76a59788edd04997d537bc624df/adobe5k_dpe/deeplpf_example_test_output/a4742-Duggan_090331_6517_output.png" /></td> 
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/a1f98969249067e89137b06fe82c71d44485cd4f/adobe5k_dpe/deeplpf_example_test_inference/a4742-Duggan_090331_6517_TEST_425_1_PSNR_29.825_SSIM_0.984.jpg"/></td> 
   </tr>
     <tr>
     <th>Input</th>
@@ -59,9 +59,9 @@
     <th>Ours (DeepLPF)</th>
   </tr>
   <tr>
-      <td><img src="https://github.com/sjmoran/DeepLPF/blob/3247d4dedce32aeaad54586d2c0b478189ed8d82/adobe5k_dpe/deeplpf_example_test_input/a4774-_DGW0330.png" width="400" height="200"/></td>     
-     <td><img src="https://github.com/sjmoran/DeepLPF/blob/28d9bfad7bf3649b25aa6c69dd25226474fd8339/adobe5k_dpe/deeplpf_example_test_output/a4774-_DGW0330_gt.png" width="400" height="200"/></td> 
-    <td><img src="https://github.com/sjmoran/DeepLPF/blob/37d2a682f2b0970fc0d3fd0c30d8512d909737b5/adobe5k_dpe/deeplpf_example_test_inference/a4774-_DGW0330_TEST_425_7_PSNR_24.233_SSIM_0.926.jpg" width="400" height="200"/></td> 
+      <td><img src="https://github.com/sjmoran/DeepLPF/blob/3247d4dedce32aeaad54586d2c0b478189ed8d82/adobe5k_dpe/deeplpf_example_test_input/a4774-_DGW0330.png"/></td>     
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/28d9bfad7bf3649b25aa6c69dd25226474fd8339/adobe5k_dpe/deeplpf_example_test_output/a4774-_DGW0330_gt.png"/></td> 
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/37d2a682f2b0970fc0d3fd0c30d8512d909737b5/adobe5k_dpe/deeplpf_example_test_inference/a4774-_DGW0330_TEST_425_7_PSNR_24.233_SSIM_0.926.jpg"/></td> 
   </tr>
     <tr>
     <th>Input</th>
@@ -69,9 +69,9 @@
     <th>Ours (DeepLPF)</th>
   </tr>
   <tr>
-      <td><img src="https://github.com/sjmoran/DeepLPF/blob/33b02f2a6f1d079e0a2b6b025f576f5b1f3c8ac7/adobe5k_dpe/deeplpf_example_test_input/a4591-Duggan_080411_5940.png" width="400" height="200"/></td>     
-     <td><img src="https://github.com/sjmoran/DeepLPF/blob/10c985c9f69cf1bb541517e14624dcdc923e2b78/adobe5k_dpe/deeplpf_example_test_output/a4591-Duggan_080411_5940.tif_GT.png" width="400" height="200"/></td> 
-    <td><img src="https://github.com/sjmoran/DeepLPF/blob/c46645adbc897ea6e773fed729b2d99d5bf59dcc/adobe5k_dpe/deeplpf_example_test_inference/a4591-Duggan_080411_5940_TEST_425_20_PSNR_28.000_SSIM_0.951.jpg" width="400" height="200"/></td> 
+      <td><img src="https://github.com/sjmoran/DeepLPF/blob/33b02f2a6f1d079e0a2b6b025f576f5b1f3c8ac7/adobe5k_dpe/deeplpf_example_test_input/a4591-Duggan_080411_5940.png" /></td>     
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/10c985c9f69cf1bb541517e14624dcdc923e2b78/adobe5k_dpe/deeplpf_example_test_output/a4591-Duggan_080411_5940.tif_GT.png"/></td> 
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/c46645adbc897ea6e773fed729b2d99d5bf59dcc/adobe5k_dpe/deeplpf_example_test_inference/a4591-Duggan_080411_5940_TEST_425_20_PSNR_28.000_SSIM_0.951.jpg"/></td> 
   </tr>
   <tr>
     <th>Input</th>
@@ -79,9 +79,9 @@
     <th>Ours (DeepLPF)</th>
   </tr>
   <tr>
-      <td><img src="https://github.com/sjmoran/DeepLPF/blob/b614871bb72a6573cd45fc487f5ad2d5e7e6edda/adobe5k_dpe/deeplpf_example_test_input/a4521-kme_0310.png" width="400" height="200"/></td>     
-     <td><img src="https://github.com/sjmoran/DeepLPF/blob/9404949f046a53b87a04ecc17583d0fa01951176/adobe5k_dpe/deeplpf_example_test_output/a4521-kme_0310.png" width="400" height="200"/></td> 
-    <td><img src="https://github.com/sjmoran/DeepLPF/blob/7b5e10962cead0b0c20e47f7a0c750562f7bfc74/adobe5k_dpe/deeplpf_example_test_inference/a4521-kme_0310_TEST_800_5_PSNR_28.774_SSIM_0.897.jpg" width="400" height="200"/></td> 
+      <td><img src="https://github.com/sjmoran/DeepLPF/blob/b614871bb72a6573cd45fc487f5ad2d5e7e6edda/adobe5k_dpe/deeplpf_example_test_input/a4521-kme_0310.png"/></td>     
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/9404949f046a53b87a04ecc17583d0fa01951176/adobe5k_dpe/deeplpf_example_test_output/a4521-kme_0310.png"/></td> 
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/7b5e10962cead0b0c20e47f7a0c750562f7bfc74/adobe5k_dpe/deeplpf_example_test_inference/a4521-kme_0310_TEST_800_5_PSNR_28.774_SSIM_0.897.jpg"/></td> 
   </tr>
   <tr>
     <th>Input</th>
@@ -89,9 +89,9 @@
     <th>Ours (DeepLPF)</th>
   </tr>
   <tr>
-    <td><img src="https://github.com/sjmoran/DeepLPF/blob/76bbc1d5673cf0c90c7316d93fecefa9b5a62052/adobe5k_dpe/deeplpf_example_test_input/a4869-09-05-19-at-19h05m38s-_MG_9563.png" width="400" height="200"/></td>     
-     <td><img src="https://github.com/sjmoran/DeepLPF/blob/62d12eff53e30382553f75c32743596a7919deba/adobe5k_dpe/deeplpf_example_test_output/a4869-09-05-19-at-19h05m38s-_MG_9563.png" width="400" height="200"/></td>     
-     <td><img src="https://github.com/sjmoran/DeepLPF/blob/c75cea3d600136005ea1078db3fc663011c54d8b/adobe5k_dpe/deeplpf_example_test_inference/a4869-09-05-19-at-19h05m38s-_MG_9563_TEST_500_29_PSNR_30.090_SSIM_0.978.jpg" width="400" height="200"/></td> 
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/76bbc1d5673cf0c90c7316d93fecefa9b5a62052/adobe5k_dpe/deeplpf_example_test_input/a4869-09-05-19-at-19h05m38s-_MG_9563.png"/></td>     
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/62d12eff53e30382553f75c32743596a7919deba/adobe5k_dpe/deeplpf_example_test_output/a4869-09-05-19-at-19h05m38s-_MG_9563.png"/></td>     
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/c75cea3d600136005ea1078db3fc663011c54d8b/adobe5k_dpe/deeplpf_example_test_inference/a4869-09-05-19-at-19h05m38s-_MG_9563_TEST_500_29_PSNR_30.090_SSIM_0.978.jpg"/></td> 
   </tr>
   <tr>
     <th>Input</th> 
@@ -99,8 +99,8 @@
     <th>Ours (DeepLPF)</th>
   </tr>
   <tr>
-    <td><img src="https://github.com/sjmoran/DeepLPF/blob/c50fa517cbeb88ace1970b54da712e7872fbd95f/adobe5k_dpe/deeplpf_example_test_input/a4933-Duggan_090428_8040.png" width="400" height="200"/></td>   
-     <td><img src="https://github.com/sjmoran/DeepLPF/blob/86a9b78ff36d3f71d491a158fd7956b5880cd991/adobe5k_dpe/deeplpf_example_test_output/a4933-Duggan_090428_8040.png" width="400" height="200"/></td>     <td><img src="https://github.com/sjmoran/DeepLPF/blob/7745ebfb35fc9a6c8e27bbc09c4b82c94a77e632/adobe5k_dpe/deeplpf_example_test_inference/a4933-Duggan_090428_8040_TEST_500_23_PSNR_19.011_SSIM_0.882.jpg" width="400" height="200"/></td> 
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/c50fa517cbeb88ace1970b54da712e7872fbd95f/adobe5k_dpe/deeplpf_example_test_input/a4933-Duggan_090428_8040.png" /></td>   
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/86a9b78ff36d3f71d491a158fd7956b5880cd991/adobe5k_dpe/deeplpf_example_test_output/a4933-Duggan_090428_8040.png"/></td>     <td><img src="https://github.com/sjmoran/DeepLPF/blob/7745ebfb35fc9a6c8e27bbc09c4b82c94a77e632/adobe5k_dpe/deeplpf_example_test_inference/a4933-Duggan_090428_8040_TEST_500_23_PSNR_19.011_SSIM_0.882.jpg"/></td> 
   </tr>
      <tr>
     <th>Input</th> 
@@ -108,9 +108,9 @@
     <th>Ours (DeepLPF)</th>
   </tr>
   <tr>
-    <td><img src="https://github.com/sjmoran/DeepLPF/blob/944e9bfac7ecf7b20b53f1142bf57bf0d2c6bfaf/adobe5k_dpe/deeplpf_example_test_input/a4783-20090321_at_19h16m32__MG_0220.png" width="400" height="200"/></td>   
-     <td><img src="https://github.com/sjmoran/DeepLPF/blob/4b5448fc529f9f5f71d117ad6fb54215ae2164c8/adobe5k_dpe/deeplpf_example_test_output/a4783-20090321_at_19h16m32__MG_0220.png" width="400" height="200"/></td>     
-     <td><img src="https://github.com/sjmoran/DeepLPF/blob/f8b20f0a102c549f716748a3d5e353c48a24d768/adobe5k_dpe/deeplpf_example_test_inference/a4783-20090321_at_19h16m32__MG_0220_TEST_500_2_PSNR_26.362_SSIM_0.905.jpg" width="400" height="200"/></td> 
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/944e9bfac7ecf7b20b53f1142bf57bf0d2c6bfaf/adobe5k_dpe/deeplpf_example_test_input/a4783-20090321_at_19h16m32__MG_0220.png"/></td>   
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/4b5448fc529f9f5f71d117ad6fb54215ae2164c8/adobe5k_dpe/deeplpf_example_test_output/a4783-20090321_at_19h16m32__MG_0220.png"/></td>     
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/f8b20f0a102c549f716748a3d5e353c48a24d768/adobe5k_dpe/deeplpf_example_test_inference/a4783-20090321_at_19h16m32__MG_0220_TEST_500_2_PSNR_26.362_SSIM_0.905.jpg"/></td> 
   </tr>
         <tr>
     <th>Input</th> 
@@ -118,9 +118,9 @@
     <th>Ours (DeepLPF)</th>
   </tr>
   <tr>
-    <td><img src="https://github.com/sjmoran/DeepLPF/blob/fc339bc7177aad138cdd7b3378056b97e6b5afc9/adobe5k_dpe/deeplpf_example_test_input/a4514-kme_0258.png" width="400" height="200"/></td>   
-     <td><img src="https://github.com/sjmoran/DeepLPF/blob/2e2213fbdf07f890e22c40ef2ee31c7cafe98679/adobe5k_dpe/deeplpf_example_test_output/a4514-kme_0258.png" width="400" height="200"/></td>     
-     <td><img src="https://github.com/sjmoran/DeepLPF/blob/2e2213fbdf07f890e22c40ef2ee31c7cafe98679/adobe5k_dpe/deeplpf_example_test_inference/a4514-kme_0258_TEST_500_27_PSNR_27.426_SSIM_0.879.jpg" width="400" height="200"/></td> 
+    <td><img src="https://github.com/sjmoran/DeepLPF/blob/fc339bc7177aad138cdd7b3378056b97e6b5afc9/adobe5k_dpe/deeplpf_example_test_input/a4514-kme_0258.png"/></td>   
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/2e2213fbdf07f890e22c40ef2ee31c7cafe98679/adobe5k_dpe/deeplpf_example_test_output/a4514-kme_0258.png"/></td>     
+     <td><img src="https://github.com/sjmoran/DeepLPF/blob/2e2213fbdf07f890e22c40ef2ee31c7cafe98679/adobe5k_dpe/deeplpf_example_test_inference/a4514-kme_0258_TEST_500_27_PSNR_27.426_SSIM_0.879.jpg"/></td> 
   </tr>
 </table>
 
