@@ -164,7 +164,7 @@ This model achieves a PSNR of 23.90dB and an SSIM of 0.911 on the Adobe_DPE imag
 4. Run the command and the results will appear in a timestamped directory in the same directory as main.py:
 
 ```
-python3 main.py --inference_img_dirpath=./adobe5k_dpe/ --checkpoint_filepath=./pretrained_models/adobe_dpe/deeplpf_validpsnr_23.378_validloss_0.033_testpsnr_23.904_testloss_0.031_epoch_424_model.pt
+python3 main.py --inference_img_list_path=./adobe5k_dpe/images_inference.txt --inference_img_dirpath=./adobe5k_dpe/ --checkpoint_filepath=./pretrained_models/adobe_dpe/deeplpf_validpsnr_23.378_validloss_0.033_testpsnr_23.904_testloss_0.031_epoch_424_model.pt
 ```
 
 ### Pre-trained models
