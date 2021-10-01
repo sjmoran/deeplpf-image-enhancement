@@ -7,7 +7,7 @@
 <p>Main repository for the CVPR 2020 paper <b>DeepLPF: Deep Local Parametric Filters for Image Enhancement</b>. Here you will find a link to the code, pre-trained models and information on the datasets. Please raise a Github issue if you need assistance of have any questions on the research. 
 </p>
 
-**_Training your own DeepLPF:_** if you have difficulities or experience artefacts in your images, please contact the lead author for assistance. The result is most likely due to not training long enough for the model to properly converge. We are very responsive and will be glad to assist on any queries regarding the model, so please do feel free to reach out.
+**_Training your own DeepLPF:_** if you have difficulities or experience artefacts in your images, please contact the lead author for assistance. We are very responsive and will be glad to assist on any queries regarding the model, so please do feel free to reach out.
 
 <p align="center">
 <img src="./images/teaser.png" width="80%"/>
