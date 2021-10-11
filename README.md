@@ -9,7 +9,7 @@
 
 **_Training your own DeepLPF:_** if you have difficulities or experience artefacts in your images, please contact the lead author for assistance. We are very responsive and will be glad to assist on any queries regarding the model, so please do feel free to reach out.
 
-**_Note this code is designed for batch size of 1. Using higher batch sizes is not supported and could lead to artefacts_**
+**_Note this code is designed for batch size of 1. Using higher batch sizes is not supported and could lead to artefacts._**
 
 <p align="center">
 <img src="./images/teaser.png" width="80%"/>
