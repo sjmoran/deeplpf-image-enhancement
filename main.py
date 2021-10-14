@@ -44,7 +44,8 @@ matplotlib.use('agg')
 
 def main():
 
-    assert("*** Before running this code ensure you keep the default batch size of 1. The code has not been engineered to support higher batch sizes. See README for more detail. Remove this assertion statement to continue. ***")
+    print("*** Before running this code ensure you keep the default batch size of 1. The code has not been engineered to support higher batch sizes. See README for more detail. Remove the exit() statement to use code. ***")
+    exit()
 
     writer = SummaryWriter()
 
