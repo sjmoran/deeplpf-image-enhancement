@@ -17,14 +17,10 @@ Authors: Sean Moran (sean.j.moran@gmail.com),
 
 Instructions:
 
-To get this code working on your system / problem you will need to edit the
-data loading functions, as follows:
+To get this code working on your system / problem please see the README.
 
-1. main.py, change the paths for the data directories to point to your data
-directory
-
-2. data.py, lines 248, 256, change the folder names of the data input and
-output directories to point to your folder names
+*** BATCH SIZE: Note this code is designed for a batch size of 1. The code needs re-engineered to support higher batch sizes. Using higher batch sizes is not supported currently and could lead to artefacts. To replicate our reported results 
+please use a batch size of 1 only ***
 '''
 import model
 import metric
@@ -47,6 +43,8 @@ np.set_printoptions(threshold=sys.maxsize)
 matplotlib.use('agg')
 
 def main():
+
+    assert("*** Before running this code ensure you keep the default batch size of 1. The code has not been engineered to support higher batch sizes. See README for more detail. Remove this assertion statement to continue. ***")
 
     writer = SummaryWriter()
 
@@ -205,7 +203,7 @@ def main():
 
         running_loss = 0.0
         examples = 0
-        batch_size = 1
+        batch_size = 1       # *** WARNING: batch size of > 1 not supported in current version of code ***
         total_examples = 0
 
         for epoch in range(num_epoch):
