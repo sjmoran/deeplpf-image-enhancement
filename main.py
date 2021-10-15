@@ -235,8 +235,8 @@ def main():
                 optimizer.step()
 
                 running_loss += loss.data[0]
-                examples += batch_size
-                total_examples+=batch_size
+                examples += BATCH_SIZE
+                total_examples+=BATCH_SIZE
 
                 writer.add_scalar('Loss/train', loss.data[0], total_examples)
 
@@ -270,8 +270,8 @@ def main():
                 loss = criterion(net_output_img_batch, output_img_batch)
 
                 running_loss += loss.data[0]
-                examples += batch_size
-                total_examples+=batch_size
+                examples += BATCH_SIZE
+                total_examples+=BATCH_SIZE
 
                 writer.add_scalar('Loss/train', loss.data[0], total_examples)
 
