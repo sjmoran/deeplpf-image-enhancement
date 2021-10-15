@@ -110,7 +110,7 @@ def main():
 
     logging.info('##############################')
 
-    
+    BATCH_SIZE=1  # *** WARNING: batch size of > 1 not supported in current version of code ***
 
     if (checkpoint_filepath is not None) and (inference_img_dirpath is not None):
 
@@ -130,7 +130,8 @@ def main():
                                     transform=transforms.Compose([transforms.ToTensor()]), normaliser=1,
                                     is_inference=True)
 
-        inference_data_loader = torch.utils.data.DataLoader(inference_dataset, batch_size=1, shuffle=False,
+        assert(BATCH_SIZE==1)
+        inference_data_loader = torch.utils.data.DataLoader(inference_dataset, batch_size=BATCH_SIZE, shuffle=False,
                                                             num_workers=6)
 
         '''
@@ -152,6 +153,8 @@ def main():
 
     else:
 
+        assert(BATCH_SIZE==1)
+
         training_data_loader = Adobe5kDataLoader(data_dirpath=training_img_dirpath,
                                                  img_ids_filepath=train_img_list_path)
         training_data_dict = training_data_loader.load_data()
@@ -168,11 +171,11 @@ def main():
         testing_data_dict = testing_data_loader.load_data()
         testing_dataset = Dataset(data_dict=testing_data_dict, normaliser=1,is_valid=True)
 
-        training_data_loader = torch.utils.data.DataLoader(training_dataset, batch_size=1, shuffle=True,
+        training_data_loader = torch.utils.data.DataLoader(training_dataset, batch_size=BATCH_SIZE, shuffle=True,
                                                        num_workers=6)
-        testing_data_loader = torch.utils.data.DataLoader(testing_dataset, batch_size=1, shuffle=False,
+        testing_data_loader = torch.utils.data.DataLoader(testing_dataset, batch_size=BATCH_SIZE, shuffle=False,
                                                       num_workers=6)
-        validation_data_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=1,
+        validation_data_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=BATCH_SIZE,
                                                          shuffle=False,
                                                          num_workers=6)
         net = model.DeepLPFNet()
@@ -204,7 +207,6 @@ def main():
 
         running_loss = 0.0
         examples = 0
-        batch_size = 1       # *** WARNING: batch size of > 1 not supported in current version of code ***
         total_examples = 0
 
         for epoch in range(num_epoch):
