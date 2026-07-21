@@ -33,6 +33,13 @@ np.set_printoptions(threshold=sys.maxsize)
 
 
 class Dataset(torch.utils.data.Dataset):
+    """PyTorch dataset of (input, target) image pairs with lazy loading.
+
+    Wraps a dictionary of image-pair filepaths and loads each pair from disk on
+    demand. During training (``is_valid=False``) it applies random horizontal
+    and vertical flips as data augmentation; validation, test and inference
+    modes load the images unaugmented.
+    """
 
     def __init__(self, data_dict, transform=None, normaliser=2 ** 8 - 1, is_valid=False, is_inference=False):
         """Initialisation for the Dataset object
@@ -127,6 +134,11 @@ class Dataset(torch.utils.data.Dataset):
 
 
 class DataLoader():
+    """Abstract base class for dataset-specific loaders.
+
+    Subclasses implement :meth:`load_data` to scan a directory and build the
+    dictionary of image-pair filepaths consumed by :class:`Dataset`.
+    """
 
     def __init__(self, data_dirpath, img_ids_filepath):
         """Initialisation function for the data loader
@@ -162,6 +174,12 @@ class DataLoader():
 
 
 class Adobe5kDataLoader(DataLoader):
+    """Data loader for the Adobe5k image-enhancement dataset.
+
+    Walks ``data_dirpath`` for images whose id (the filename prefix before the
+    first ``-``) appears in ``img_ids_filepath``, pairing each ``input`` image
+    with its corresponding ``output`` image.
+    """
 
     def __init__(self, data_dirpath, img_ids_filepath):
         """Initialisation function for the data loader
@@ -176,7 +194,7 @@ class Adobe5kDataLoader(DataLoader):
         self.data_dict = defaultdict(dict)
 
     def load_data(self):
-        """ Loads the Samsung image data into a Python dictionary
+        """ Loads the Adobe5k image data into a Python dictionary
 
         :returns: Python two-level dictionary containing the images
         :rtype: Dictionary of dictionaries

@@ -29,14 +29,22 @@ np.set_printoptions(threshold=sys.maxsize)
 
 
 class ImageProcessing(object):
+    """Stateless image-processing helpers (colour conversion and metrics).
+
+    All methods are static; the class is used purely as a namespace. Tensor
+    methods operate on CHW image tensors, while the numpy metric helpers operate
+    on batched arrays of shape BxCxHxW.
+    """
 
     @staticmethod
     def rgb_to_lab(img, is_training=True):
         """ PyTorch implementation of RGB to LAB conversion: https://docs.opencv.org/3.3.0/de/d25/imgproc_color_conversions.html
         Based roughly on a similar implementation here: https://github.com/affinelayer/pix2pix-tensorflow/blob/master/pix2pix.py
-        :param img: 
-        :returns: 
-        :rtype: 
+
+        :param img: RGB image Tensor of shape CxHxW with values in [0, 1]
+        :param is_training: unused; retained for backward compatibility
+        :returns: CIELAB image Tensor of shape CxHxW with each channel rescaled to [0, 1]
+        :rtype: Tensor
 
         """
         img = img.permute(2, 1, 0)
@@ -108,7 +116,7 @@ class ImageProcessing(object):
 
     @staticmethod
     def swapimdims_HW3_3HW(img):
-        """Move the image channels to the last dimensiion of the numpy
+        """Move the image channels to the last dimension of the numpy
         multi-dimensional array
 
         :param img: numpy nd array representing the image
@@ -148,7 +156,7 @@ class ImageProcessing(object):
 
     @staticmethod
     def compute_mse(original, result):
-        """Computes the mean squared error between to RGB images represented as multi-dimensional numpy arrays.
+        """Computes the mean squared error between two RGB images represented as multi-dimensional numpy arrays.
 
         :param original: input RGB image as a numpy array
         :param result: target RGB image as a numpy array
@@ -162,8 +170,8 @@ class ImageProcessing(object):
     def compute_psnr(image_batchA, image_batchB, max_intensity):
         """Computes the PSNR for a batch of input and output images
 
-        :param image_batchA: numpy nd-array representing the image batch A of shape Bx3xWxH
-        :param image_batchB: numpy nd-array representing the image batch A of shape Bx3xWxH
+        :param image_batchA: numpy nd-array representing image batch A of shape Bx3xHxW
+        :param image_batchB: numpy nd-array representing image batch B of shape Bx3xHxW
         :param max_intensity: maximum intensity possible in the image (e.g. 255)
         :returns: average PSNR for the batch of images
         :rtype: float
@@ -186,10 +194,9 @@ class ImageProcessing(object):
     def compute_ssim(image_batchA, image_batchB):
         """Computes the SSIM for a batch of input and output images
 
-        :param image_batchA: numpy nd-array representing the image batch A of shape Bx3xWxH
-        :param image_batchB: numpy nd-array representing the image batch A of shape Bx3xWxH
-        :param max_intensity: maximum intensity possible in the image (e.g. 255)
-        :returns: average PSNR for the batch of images
+        :param image_batchA: numpy nd-array representing image batch A of shape Bx3xHxW
+        :param image_batchB: numpy nd-array representing image batch B of shape Bx3xHxW
+        :returns: average SSIM for the batch of images
         :rtype: float
 
         """

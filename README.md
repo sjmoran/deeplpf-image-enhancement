@@ -4,12 +4,12 @@
 
 **Huawei Noah's Ark Lab**
 
-<p>Main repository for the CVPR 2020 paper <b>DeepLPF: Deep Local Parametric Filters for Image Enhancement</b>. Here you will find a link to the code, pre-trained models and information on the datasets. Please raise a Github issue if you need assistance of have any questions on the research. 
+<p>Main repository for the CVPR 2020 paper <b>DeepLPF: Deep Local Parametric Filters for Image Enhancement</b>. Here you will find a link to the code, pre-trained models and information on the datasets. Please raise a Github issue if you need assistance or have any questions on the research. 
 </p>
 
-**_Training your own DeepLPF:_** if you have difficulities, please contact the lead author for assistance. We are responsive and will be glad to assist on any queries regarding the model.
+**_Training your own DeepLPF:_** if you have difficulties, please contact the lead author for assistance. We are responsive and will be glad to assist on any queries regarding the model.
 
-**_BATCH SIZE: Note this code is designed for a batch size of 1. It needs re-engineered to support higher batch sizes. Using higher batch sizes is not supported currently. To replicate our reported results please use a batch size of 1 only. If you do have a patch for DeepLPF to support higher batch sizes please raise a pull request on this repo and we will integrate._**
+**_BATCH SIZE: Note this code is designed for a batch size of 1. It needs to be re-engineered to support higher batch sizes. Using higher batch sizes is not supported currently. To replicate our reported results please use a batch size of 1 only. If you do have a patch for DeepLPF to support higher batch sizes please raise a pull request on this repo and we will integrate._**
 
 <p align="center">
 <img src="./images/teaser.png" width="80%"/>
