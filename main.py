@@ -120,6 +120,15 @@ def main():
 
     logging.info('##############################')
 
+    # Select the best available device: CUDA GPU, then Apple Silicon (MPS), then CPU
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
+    logging.info('Using device: ' + str(device))
+
     BATCH_SIZE=1  # *** WARNING: batch size of > 1 not supported in current version of code ***
 
     if (checkpoint_filepath is not None) and (inference_img_dirpath is not None):
@@ -151,7 +160,8 @@ def main():
             "Performing inference with images in directory: " + inference_img_dirpath)
 
         net = model.DeepLPFNet()
-        net.load_state_dict(torch.load(checkpoint_filepath))
+        net.load_state_dict(torch.load(checkpoint_filepath, map_location=device))
+        net.to(device)
         net.eval()
 
         criterion = model.DeepLPFLoss()
@@ -189,7 +199,7 @@ def main():
                                                          shuffle=False,
                                                          num_workers=6)
         net = model.DeepLPFNet()
-        net.cuda(0)
+        net.to(device)
 
         logging.info('######### Network created #########')
         logging.info('Architecture:\n' + str(net))
@@ -228,8 +238,8 @@ def main():
             for batch_num, data in enumerate(training_data_loader, 0):
 
                 input_img_batch, gt_img_batch, _ = Variable(data['input_img'],
-                                                                       requires_grad=False).cuda(), Variable(data['output_img'],
-                                                                                                             requires_grad=False).cuda(), data[
+                                                                       requires_grad=False).to(device), Variable(data['output_img'],
+                                                                                                             requires_grad=False).to(device), data[
                     'name']
 
                 start_time = time.time()
@@ -265,8 +275,8 @@ def main():
 
                 input_img_batch, output_img_batch, category = Variable(
                     data['input_img'],
-                    requires_grad=False).cuda(), Variable(data['output_img'],
-                                                         requires_grad=False).cuda(), \
+                    requires_grad=False).to(device), Variable(data['output_img'],
+                                                         requires_grad=False).to(device), \
                     data[
                     'name']
 

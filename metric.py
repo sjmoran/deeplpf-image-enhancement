@@ -77,15 +77,16 @@ class Evaluator():
         if not os.path.isdir(out_dirpath):
             os.mkdir(out_dirpath)
 
-        # switch model to evaluation mode
+        # switch model to evaluation mode; run on whichever device the model
+        # already lives on (set by the caller)
         net.eval()
-        net.cuda()
+        device = next(net.parameters()).device
 
         with torch.no_grad():
             for batch_num, data in enumerate(self.data_loader, 0):
 
-                input_img_batch, output_img_batch, name = Variable(data['input_img'], requires_grad=False).cuda(), Variable(data['output_img'],
-                                                                                                   requires_grad=False).cuda(), \
+                input_img_batch, output_img_batch, name = Variable(data['input_img'], requires_grad=False).to(device), Variable(data['output_img'],
+                                                                                                   requires_grad=False).to(device), \
                     data['name']
                 input_img_batch = input_img_batch.unsqueeze(0)
 
