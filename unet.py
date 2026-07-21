@@ -20,9 +20,16 @@ import torch
 import torch.nn as nn
 
 class UNet(nn.Module):
+    """U-Net backbone used to extract per-pixel features from the input image.
+
+    A standard encoder-decoder U-Net with skip connections built from
+    :class:`LocalNet` double-convolution blocks. The decoder pads feature maps
+    as needed so skip connections align for arbitrary input sizes, and a global
+    residual connection adds the input image back to the output.
+    """
 
     def __init__(self):
-        """UNet implementation
+        """Build the U-Net encoder-decoder layers.
 
         :returns: N/A
         :rtype: N/A
@@ -142,6 +149,11 @@ class UNet(nn.Module):
 
 
 class LocalNet(nn.Module):
+    """Double 3x3 convolution block with reflection padding and LeakyReLU.
+
+    The basic building block of the U-Net encoder and decoder: two reflection-
+    padded 3x3 convolutions each followed by a LeakyReLU activation.
+    """
 
     def forward(self, x_in):
         """Double convolutional block
@@ -174,6 +186,12 @@ class LocalNet(nn.Module):
 
 # Model definition
 class UNetModel(nn.Module):
+    """U-Net backbone wrapper that produces a 64-channel feature map.
+
+    Runs the :class:`UNet` and projects its 3-channel output to a 64-channel
+    feature map with a final reflection-padded 3x3 convolution. This feature map
+    is what the parametric filter head consumes.
+    """
 
     def __init__(self):
         """UNet model definition
@@ -190,10 +208,10 @@ class UNetModel(nn.Module):
         self.refpad = nn.ReflectionPad2d(1)
 
     def forward(self, img):
-        """UNet model definition
+        """Extract features from the input image.
 
-        :param image: input image
-        :returns: image features
+        :param img: input RGB image Tensor of shape BxCxHxW
+        :returns: 64-channel feature map Tensor of shape Bx64xHxW
         :rtype: Tensor
 
         """

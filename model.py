@@ -30,12 +30,18 @@ matplotlib.use('agg')
 
 
 class DeepLPFLoss(nn.Module):
+    """DeepLPF training loss.
+
+    Combines an L1 term in CIELAB colour space with a multi-scale structural
+    similarity (MS-SSIM) term on the L (lightness) channel, as described in
+    Section 3.4 of the paper. The total loss is ``L1 + 1e-3 * (1 - MS-SSIM)``.
+    """
 
     def __init__(self, ssim_window_size=5, alpha=0.5):
         """Initialisation of the DeepLPF loss function
 
         :param ssim_window_size: size of averaging window for SSIM
-        :param alpha: interpolation paramater for L1 and SSIM parts of the loss
+        :param alpha: interpolation parameter for L1 and SSIM parts of the loss
         :returns: N/A
         :rtype: N/A
 
@@ -175,10 +181,10 @@ class DeepLPFLoss(nn.Module):
     def forward(self, predicted_img_batch, target_img_batch):
         """Forward function for the DeepLPF loss
 
-        :param predicted_img_batch: 
-        :param target_img_batch: Tensor of shape BxCxWxH
+        :param predicted_img_batch: predicted image Tensor of shape BxCxHxW
+        :param target_img_batch: ground-truth image Tensor of shape BxCxHxW
         :returns: value of loss function
-        :rtype: float
+        :rtype: Tensor
 
         """
         if predicted_img_batch.shape[2]!=target_img_batch.shape[2]:
@@ -219,6 +225,14 @@ class DeepLPFLoss(nn.Module):
 
 
 class BinaryLayer(nn.Module):
+    """Binarisation layer with a straight-through estimator.
+
+    The forward pass returns the sign of the input; the backward pass passes
+    gradients through unchanged except where the input saturates (|input| > 1),
+    following the straight-through estimator of Courbariaux et al. It is used by
+    the graduated filter to make discrete above/below-line decisions while
+    remaining trainable end-to-end.
+    """
 
     def forward(self, input):
         """Forward function for binary layer
@@ -245,13 +259,21 @@ class BinaryLayer(nn.Module):
 
 
 class CubicFilter(nn.Module):
+    """Cubic-polynomial filter branch of DeepLPF.
+
+    Regresses 60 coefficients (20 per RGB channel) from the backbone features
+    and evaluates a per-pixel cubic polynomial in the normalised (x, y) image
+    coordinates and the pixel intensity, producing an additive adjustment map.
+    See Section 3.2 of the paper.
+    """
 
     def __init__(self, num_in_channels=64, num_out_channels=64, batch_size=1):
-        """Initialisation function
+        """Build the cubic-filter branch.
 
-        :param block: a block (layer) of the neural network
-        :param num_layers:  number of neural network layers
-        :returns: initialises parameters of the neural networ
+        :param num_in_channels: number of input feature-map channels
+        :param num_out_channels: number of channels used by the conv stack
+        :param batch_size: image batch size (only 1 is supported)
+        :returns: N/A
         :rtype: N/A
 
         """
@@ -354,6 +376,13 @@ class CubicFilter(nn.Module):
 
 
 class GraduatedFilter(nn.Module):
+    """Graduated-filter branch of DeepLPF.
+
+    Emulates a photographic graduated neutral-density filter. Regresses the
+    parameters of three graduated filters per RGB channel (line slope, offset,
+    scale, and an above/below-line indicator via :class:`BinaryLayer`) and
+    combines them into a multiplicative scaling map. See Section 3.3 of the paper.
+    """
 
     def __init__(self, num_in_channels=64, num_out_channels=64):
         """Initialisation function for the graduated filter
@@ -410,7 +439,7 @@ class GraduatedFilter(nn.Module):
         :param factor: scale factor
         :param invert: binary indicator variable
         :param d1: distance between top and mid line
-        :param d2: distannce between botto and mid line
+        :param d2: distance between bottom and mid line
         :param max_scale: maximum scaling factor possible
         :param top_line:  representation of top line
         :returns: inverted scaling mask
@@ -506,7 +535,6 @@ class GraduatedFilter(nn.Module):
 
         # Scales
         max_scale = 2
-        min_scale = 0
 
         scale_factor1 = self.tanh01(G[0, 15]) * max_scale
         scale_factor2 = self.tanh01(G[0, 16]) * max_scale
@@ -579,13 +607,20 @@ class GraduatedFilter(nn.Module):
 
 
 class EllipticalFilter(nn.Module):
+    """Elliptical-filter branch of DeepLPF.
+
+    Regresses the parameters of three rotated ellipses per RGB channel (centre,
+    semi-axes, orientation and scale) from the backbone features and produces a
+    multiplicative scaling map whose effect decays with radius inside each
+    ellipse. See Section 3.3 of the paper.
+    """
 
     def __init__(self, num_in_channels=64, num_out_channels=64):
-        """Initialisation function
+        """Build the elliptical-filter branch.
 
-        :param block: a block (layer) of the neural network
-        :param num_layers:  number of neural network layers
-        :returns: initialises parameters of the neural networ
+        :param num_in_channels: number of input feature-map channels
+        :param num_out_channels: number of channels used by the conv stack
+        :returns: N/A
         :rtype: N/A
 
         """
@@ -633,11 +668,22 @@ class EllipticalFilter(nn.Module):
         """Gets the elliptical scaling mask according to the equation of a
         rotated ellipse
 
+        :param x_axis: normalised x-coordinate grid
+        :param y_axis: normalised y-coordinate grid
+        :param shift_x: ellipse centre x-coordinate
+        :param shift_y: ellipse centre y-coordinate
+        :param semi_axis_x: ellipse semi-axis along x
+        :param semi_axis_y: ellipse semi-axis along y
+        :param alpha: rotation angle of the ellipse
+        :param scale_factor: peak scaling applied at the ellipse centre
+        :param max_scale: maximum permitted scaling factor
+        :param eps: small constant to avoid division by zero
+        :param radius: ellipse radius at the current angle
         :returns: scaling mask
         :rtype: Tensor
 
         """
-        # Check whether a point is inside our outside of the ellipse and set the scaling factor accordingly
+        # Check whether a point is inside or outside of the ellipse and set the scaling factor accordingly
         ellipse_equation_part1 = (((x_axis - shift_x)*torch.cos(alpha) + (y_axis - shift_y)*torch.sin(alpha)) ** 2) / ((semi_axis_x)**2)
         ellipse_equation_part2 = (((x_axis - shift_x)*torch.sin(alpha) - (y_axis - shift_y)*torch.cos(alpha)) ** 2) / ((semi_axis_y)**2)
 
@@ -666,7 +712,6 @@ class EllipticalFilter(nn.Module):
 
         # max_scale is the maximum an ellipse can scale the image R,G,B values by
         max_scale = 2
-        min_scale = 0
 
         feat_elliptical = torch.cat((feat, img), 1)
         feat_elliptical = self.upsample(feat_elliptical)
@@ -693,21 +738,13 @@ class EllipticalFilter(nn.Module):
         y_axis = Variable(torch.arange(img.shape[3]).repeat(
             img.shape[2], 1).cuda()) / img.shape[3]
 
-        # x coordinate - h position
-        right_x = (img.shape[2] - 1) / img.shape[2]
-        left_x = 0
-
         # Centre of ellipse, x-coordinate
         x_coord1 = self.tanh01(G[0, 0]) + eps1
         x_coord2 = self.tanh01(G[0, 1]) + eps1
         x_coord3 = self.tanh01(G[0, 2]) + eps1
 
-        # y coordinate - k coordinate
-        right_y = (img.shape[3] - 1) // img.shape[3]
-        left_y = 0
-
         # Centre of ellipse, y-coordinate
-        y_coord1 = self.tanh01(G[0, 3]) + eps1 
+        y_coord1 = self.tanh01(G[0, 3]) + eps1
         y_coord2 = self.tanh01(G[0, 4]) + eps1
         y_coord3 = self.tanh01(G[0, 5]) + eps1
 
@@ -819,6 +856,7 @@ class EllipticalFilter(nn.Module):
 
 
 class Block(nn.Module):
+    """Base class providing shared convolution helpers for the conv blocks."""
 
     def __init__(self):
         """Initialisation for a lower-level DeepLPF conv block
@@ -844,16 +882,16 @@ class Block(nn.Module):
 
 
 class ConvBlock(Block, nn.Module):
+    """3x3 strided convolution followed by a LeakyReLU non-linearity."""
 
     def __init__(self, num_in_channels, num_out_channels, stride=1):
         """Initialise function for the higher level convolution block
 
-        :param in_channels:
-        :param out_channels:
-        :param stride:
-        :param padding:
-        :returns:
-        :rtype:
+        :param num_in_channels: number of input channels
+        :param num_out_channels: number of output channels
+        :param stride: unused; the internal convolution uses a fixed stride of 2
+        :returns: N/A
+        :rtype: N/A
 
         """
         super(Block, self).__init__()
@@ -873,6 +911,7 @@ class ConvBlock(Block, nn.Module):
 
 
 class MaxPoolBlock(Block, nn.Module):
+    """2x2 max-pooling block with stride 2 (halves the spatial resolution)."""
 
     def __init__(self):
         """Initialise function for the max pooling block
@@ -898,10 +937,12 @@ class MaxPoolBlock(Block, nn.Module):
 
 
 class GlobalPoolingBlock(Block, nn.Module):
+    """Global average-pooling block collapsing each feature map to a scalar."""
 
     def __init__(self, receptive_field):
         """Implementation of the global pooling block. Takes the average over a 2D receptive field.
-        :param receptive_field:
+        :param receptive_field: nominal receptive field size (unused; an
+            adaptive average pool to a 1x1 output is used instead)
         :returns: N/A
         :rtype: N/A
 
@@ -922,7 +963,14 @@ class GlobalPoolingBlock(Block, nn.Module):
 
 
 class DeepLPFParameterPrediction(nn.Module):
-    import torch.nn.functional as F
+    """Applies the three parametric filters and fuses them into an enhanced image.
+
+    Given the backbone feature maps (with the input RGB image concatenated in
+    the first three channels), this module runs the cubic, graduated and
+    elliptical filter branches and combines their outputs to produce the final
+    enhanced image. This is the "Deep Local Parametric Filters" head of the
+    network.
+    """
 
     def __init__(self, num_in_channels=64, num_out_channels=64, batch_size=1):
         """Initialisation function
@@ -957,7 +1005,6 @@ class DeepLPFParameterPrediction(nn.Module):
         img = x[:, 0:3, :, :]
 
         torch.cuda.empty_cache()
-        shape = x.shape
 
         img_cubic = self.cubic_filter.get_cubic_mask(feat, img)
        
@@ -977,11 +1024,17 @@ class DeepLPFParameterPrediction(nn.Module):
 
 
 class DeepLPFNet(nn.Module):
+    """End-to-end DeepLPF network.
+
+    Composes the U-Net backbone (:class:`unet.UNetModel`) with the parametric
+    filter head (:class:`DeepLPFParameterPrediction`) to map an input RGB image
+    to an enhanced RGB image.
+    """
 
     def __init__(self):
         """Initialisation function
 
-        :returns: initialises parameters of the neural networ
+        :returns: initialises the parameters of the neural network
         :rtype: N/A
 
         """
@@ -992,9 +1045,9 @@ class DeepLPFNet(nn.Module):
     def forward(self, img):
         """Neural network forward function
 
-        :param img: forward the data img through the network
-        :returns: residual image
-        :rtype: numpy ndarray
+        :param img: input RGB image Tensor of shape BxCxHxW
+        :returns: enhanced RGB image Tensor of shape BxCxHxW
+        :rtype: Tensor
 
         """
         feat = self.backbonenet(img)

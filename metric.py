@@ -32,6 +32,12 @@ np.set_printoptions(threshold=sys.maxsize)
 
 
 class Evaluator():
+    """Evaluates a trained network on a dataset split.
+
+    Runs the network over every image in a data loader, computes the loss, PSNR
+    and SSIM, and writes the first 30 enhanced images to disk (annotated with
+    their per-image PSNR/SSIM) for qualitative inspection.
+    """
 
     def __init__(self, criterion, data_loader, split_name, log_dirpath):
         """Initialisation function for the data loader

@@ -43,7 +43,17 @@ np.set_printoptions(threshold=sys.maxsize)
 matplotlib.use('agg')
 
 def main():
+    """Entry point for training and inference.
 
+    Parses command-line arguments and either (a) runs inference with a saved
+    checkpoint when both ``--checkpoint_filepath`` and ``--inference_img_dirpath``
+    are supplied, or (b) trains a DeepLPF model from scratch on the Adobe5k
+    dataset, periodically evaluating on the validation and test splits and
+    saving the best-PSNR checkpoint.
+
+    Note: the code only supports a batch size of 1. Remove the ``exit()`` call
+    below (kept as a guard) before running.
+    """
     print("*** Before running this code ensure you keep the default batch size of 1. The code has not been engineered to support higher batch sizes. See README for more detail. Remove the exit() statement to use code. ***")
     exit()
 
@@ -62,9 +72,9 @@ def main():
         description="Train the DeepLPF neural network on image pairs")
 
     parser.add_argument(
-        "--num_epoch", type=int, required=False, help="Number of epoches (default 5000)", default=100000)
+        "--num_epoch", type=int, required=False, help="Number of epochs (default 100000)", default=100000)
     parser.add_argument(
-        "--valid_every", type=int, required=False, help="Number of epoches after which to compute validation accuracy",
+        "--valid_every", type=int, required=False, help="Number of epochs after which to compute validation accuracy",
         default=25)
     parser.add_argument(
         "--checkpoint_filepath", required=False, help="Location of checkpoint file", default=None)
