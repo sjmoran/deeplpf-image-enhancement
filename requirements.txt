@@ -1,9 +1,8 @@
-numpy==1.22.0
-scipy==1.10.0
-torch==1.7.1
-scikit_image==0.18.1
-torchvision==0.8.2
-matplotlib==3.3.2
-imageio==2.9.0
-pillow>=8.3.2
-skimage==0.0
+numpy==2.4.6
+scipy==1.17.1
+torch==2.13.0
+scikit-image==0.26.0
+torchvision==0.28.0
+matplotlib==3.11.1
+imageio==2.37.4
+pillow==12.3.0
