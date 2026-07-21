@@ -62,11 +62,11 @@ class ImageProcessing(object):
                                                     0.119193],  # G
                                                 [0.180423, 0.072169,
                                                     0.950227],  # B
-                                                ]), requires_grad=False).cuda()
+                                                ]), requires_grad=False).to(img.device)
 
         img = torch.matmul(img, rgb_to_xyz)
         img = torch.mul(img, Variable(torch.FloatTensor(
-            [1/0.950456, 1.0, 1/1.088754]), requires_grad=False).cuda())
+            [1/0.950456, 1.0, 1/1.088754]), requires_grad=False).to(img.device))
 
         epsilon = 6/29
 
@@ -76,10 +76,10 @@ class ImageProcessing(object):
         fxfyfz_to_lab = Variable(torch.FloatTensor([[0.0,  500.0,    0.0],  # fx
                                                     [116.0, -500.0,  200.0],  # fy
                                                     [0.0,    0.0, -200.0],  # fz
-                                                    ]), requires_grad=False).cuda()
+                                                    ]), requires_grad=False).to(img.device)
 
         img = torch.matmul(img, fxfyfz_to_lab) + Variable(
-            torch.FloatTensor([-16.0, 0.0, 0.0]), requires_grad=False).cuda()
+            torch.FloatTensor([-16.0, 0.0, 0.0]), requires_grad=False).to(img.device)
 
         img = img.view(shape)
         img = img.permute(2, 1, 0)
