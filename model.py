@@ -35,7 +35,7 @@ class DeepLPFLoss(nn.Module):
         """Initialisation of the DeepLPF loss function
 
         :param ssim_window_size: size of averaging window for SSIM
-        :param alpha: interpolation paramater for L1 and SSIM parts of the loss
+        :param alpha: interpolation parameter for L1 and SSIM parts of the loss
         :returns: N/A
         :rtype: N/A
 
