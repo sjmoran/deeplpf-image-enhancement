@@ -19,6 +19,7 @@ Authors: Sean Moran (sean.j.moran@gmail.com),
 import matplotlib
 matplotlib.use('agg')
 from torch.autograd import Variable
+import inspect
 import numpy as np
 import torch
 import sys
@@ -26,6 +27,15 @@ from PIL import Image
 from skimage.metrics import structural_similarity as ssim
 
 np.set_printoptions(threshold=sys.maxsize)
+
+# scikit-image >= 0.19 renamed the ``multichannel=True`` argument of
+# ``structural_similarity`` to ``channel_axis``. Detect which one this
+# installation supports so the code works across skimage versions. The images
+# passed to SSIM are HxWx3, so the channel axis is the last one.
+if "channel_axis" in inspect.signature(ssim).parameters:
+    _SSIM_MULTICHANNEL_KWARGS = {"channel_axis": -1}
+else:  # older skimage (e.g. the pinned 0.18.1)
+    _SSIM_MULTICHANNEL_KWARGS = {"multichannel": True}
 
 
 class ImageProcessing(object):
@@ -208,7 +218,7 @@ class ImageProcessing(object):
                 image_batchA[i, 0:3, :, :])
             imageB = ImageProcessing.swapimdims_3HW_HW3(
                 image_batchB[i, 0:3, :, :])
-            ssim_val += ssim(imageA, imageB, data_range=imageA.max() - imageA.min(), multichannel=True,
-                             gaussian_weights=True, win_size=11)
+            ssim_val += ssim(imageA, imageB, data_range=imageA.max() - imageA.min(),
+                             gaussian_weights=True, win_size=11, **_SSIM_MULTICHANNEL_KWARGS)
 
         return ssim_val / num_images
