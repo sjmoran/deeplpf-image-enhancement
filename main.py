@@ -77,6 +77,10 @@ def main():
     parser.add_argument(
         "--batch_size", type=int, required=False, help="Training batch size (default 1)", default=1)
     parser.add_argument(
+        "--crop_size", type=int, required=False, default=0,
+        help="If >0, randomly crop training images to this square size. Required "
+             "for --batch_size>1 because FiveK images vary in size.")
+    parser.add_argument(
         "--valid_every", type=int, required=False, help="Number of epochs after which to compute validation accuracy",
         default=25)
     parser.add_argument(
@@ -103,6 +107,7 @@ def main():
     args = parser.parse_args()
     num_epoch = args.num_epoch
     batch_size = args.batch_size
+    crop_size = args.crop_size
     valid_every = args.valid_every
     checkpoint_filepath = args.checkpoint_filepath
     inference_img_dirpath = args.inference_img_dirpath
@@ -183,7 +188,13 @@ def main():
                                                  img_ids_filepath=train_img_list_path)
         training_data_dict = training_data_loader.load_data()
 
-        training_dataset = Dataset(data_dict=training_data_dict, normaliser=1, is_valid=False)
+        if BATCH_SIZE > 1 and crop_size <= 0:
+            logging.warning(
+                "batch_size > 1 requires uniform image sizes; FiveK images vary. "
+                "Pass --crop_size (e.g. --crop_size 256) or the data loader will "
+                "fail to collate. Continuing anyway.")
+        training_dataset = Dataset(data_dict=training_data_dict, normaliser=1, is_valid=False,
+                                   crop_size=(crop_size if crop_size > 0 else None))
 
         validation_data_loader = Adobe5kDataLoader(data_dirpath=training_img_dirpath,
                                                img_ids_filepath=valid_img_list_path)

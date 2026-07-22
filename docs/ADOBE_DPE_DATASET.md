@@ -16,7 +16,9 @@ benchmark; use the steps below if you want faithfulness to the paper.
 - The **MIT-Adobe FiveK** dataset (~50 GB of raw DNG files plus a Lightroom
   catalogue): <https://data.csail.mit.edu/graphics/fivek/>
 - **Adobe Lightroom Classic** (the catalogue `fivek.lrcat` opens in Lightroom).
-- Disk space for the exported PNGs (a few GB at 512px).
+- **Disk space:** the FiveK archive is ~47 GiB and extracts to a similar size, so
+  plan for **~95 GiB free** for the raw dataset (an external drive is fine), plus
+  a few GB for the exported 512px PNGs.
 
 The raw download and the Lightroom export are manual steps — Lightroom is a GUI
 application and cannot be scripted here. The scripts in `data_prep/` handle
@@ -114,6 +116,22 @@ python main.py \
   --test_img_list_path=./adobe5k_dpe/images_test.txt \
   --batch_size=1
 ```
+
+**Batch size > 1** needs a uniform image size, because FiveK images vary in
+dimensions and the default collation cannot stack different-sized tensors. Pass
+`--crop_size` to randomly crop training pairs to a fixed square, e.g. for a batch
+of 8 with 256×256 crops:
+
+```bash
+python main.py \
+  --training_img_dirpath=./adobe5k_dpe_data/ \
+  --train_img_list_path=./adobe5k_dpe/images_train.txt \
+  --valid_img_list_path=./adobe5k_dpe/images_valid.txt \
+  --test_img_list_path=./adobe5k_dpe/images_test.txt \
+  --batch_size=8 --crop_size=256
+```
+
+Evaluation and inference run at batch size 1 and are not cropped.
 
 Run inference with a pretrained checkpoint:
 
