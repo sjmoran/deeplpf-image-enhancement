@@ -1,0 +1,141 @@
+# Preparing the Adobe-DPE dataset
+
+This guide covers building the **Adobe-DPE** dataset used to train and evaluate
+DeepLPF: the MIT-Adobe FiveK photographs, processed through Adobe Lightroom
+following the Deep Photo Enhancer (DPE) protocol, with Expert C retouching as
+the target. It is the path that reproduces the paper's reported numbers.
+
+There is an easier alternative — the 480p Expert-C FiveK hosted by the
+[Image-Adaptive-3DLUT](https://github.com/HuiZeng/Image-Adaptive-3DLUT) repo —
+but it uses a different preprocessing and split, so it will not reproduce
+DeepLPF's Adobe-DPE numbers exactly. Use it if you only need a standard FiveK
+benchmark; use the steps below if you want faithfulness to the paper.
+
+## What you need
+
+- The **MIT-Adobe FiveK** dataset (~50 GB of raw DNG files plus a Lightroom
+  catalogue): <https://data.csail.mit.edu/graphics/fivek/>
+- **Adobe Lightroom Classic** (the catalogue `fivek.lrcat` opens in Lightroom).
+- Disk space for the exported PNGs (a few GB at 512px).
+
+The raw download and the Lightroom export are manual steps — Lightroom is a GUI
+application and cannot be scripted here. The scripts in `data_prep/` handle
+everything after the export.
+
+## Step 1 — Download and open the catalogue
+
+1. Download and extract FiveK from the link above (the single 50 GB archive or
+   the multi-part version).
+2. Open `fivek.lrcat` in Lightroom Classic and let any catalogue upgrade finish
+   (this can take several minutes).
+
+In the **Collections** panel you will see an `Inputs` group (several
+white-balance renderings of the raw files) and an `Experts` group (`A`–`E`, the
+five retouchers). DeepLPF uses an input rendering as the **input** and **Expert
+C** as the **target**.
+
+## Step 2 — Export the input images
+
+1. In **Collections**, select an entry under `Inputs`. The commonly used choice
+   (from the [FiveK-with-Lightroom guide](https://github.com/yuanming-hu/exposure/wiki/Preparing-data-for-the-MIT-Adobe-FiveK-Dataset-with-Lightroom))
+   is `Inputs/Input with Daylight WhiteBalance minus 1.5`. The exact DPE input
+   rendering is not fully documented; Step 5 tells you how to confirm your
+   choice against the bundled reference images, so pick one and validate.
+2. Select all images (`Ctrl`/`Cmd`-`A`), right-click, **Export**.
+3. Export settings:
+   - **Format:** PNG
+   - **Colour space:** sRGB
+   - **Bit depth:** 8 bits/component
+   - **Image sizing:** resize so the **long edge = 512 px**, do not enlarge
+   - **Destination:** an empty folder, e.g. `~/fivek_export/input/`
+
+The 512 px long edge matches the DeepLPF example images (which are 512×341 /
+512×343). Lightroom preserves the original filenames (`aXXXX-<camera>.png`), and
+the `aXXXX-` prefix is the image id the data loader keys on — keep it.
+
+## Step 3 — Export the Expert C targets
+
+1. In **Collections**, select `Experts/C`.
+2. Select all, right-click, **Export**, with the **same settings as Step 2**
+   (PNG, sRGB, 8-bit, long edge 512) to a second folder, e.g.
+   `~/fivek_export/output/`.
+
+## Step 4 — Organise into the expected layout
+
+The data loader expects a directory with an `input/` folder and an `output/`
+folder, each holding files named `<id>-....png`. Either export directly into
+those two folders, or run:
+
+```bash
+python data_prep/organise_fivek.py ~/fivek_export/input ~/fivek_export/output \
+    ./adobe5k_dpe_data --long-edge 512
+```
+
+This converts each image to RGB (dropping any alpha), resizes to a 512 px long
+edge, pairs input and target by id, and writes:
+
+```
+adobe5k_dpe_data/
+  input/   a0001-....png ...
+  output/  a0001-....png ...
+```
+
+Pass `--no-resize` if you exported at the target resolution already.
+
+## Step 5 — Verify before training
+
+```bash
+python data_prep/verify_dataset.py ./adobe5k_dpe_data
+```
+
+This runs the repo's own `Adobe5kDataLoader` over the `train`, `valid` and
+`test` splits in `adobe5k_dpe/` and reports how many ids were paired, which are
+missing, and the channel count of a sample. It also compares your exported
+inputs against the bundled example images
+(`adobe5k_dpe/deeplpf_example_test_input/`) — a small mean difference means your
+preprocessing is consistent with DeepLPF's; a large one means the input develop
+settings differ and Step 2 needs revisiting.
+
+Expected split sizes are 2250 train / 2250 valid / 500 test. Note the splits in
+`adobe5k_dpe/*.txt` are a best guess: as `adobe5k_dpe/readme.txt` records, the
+original DPE splits were unavailable when this repo was written, so exact
+reproduction of the paper's numbers may differ slightly from the split alone.
+
+## Step 6 — Train and evaluate
+
+Train (batch size 1 reproduces the paper; higher batch sizes are supported for
+throughput):
+
+```bash
+python main.py \
+  --training_img_dirpath=./adobe5k_dpe_data/ \
+  --train_img_list_path=./adobe5k_dpe/images_train.txt \
+  --valid_img_list_path=./adobe5k_dpe/images_valid.txt \
+  --test_img_list_path=./adobe5k_dpe/images_test.txt \
+  --batch_size=1
+```
+
+Run inference with a pretrained checkpoint:
+
+```bash
+python main.py \
+  --inference_img_dirpath=./adobe5k_dpe/ \
+  --inference_img_list_path=./adobe5k_dpe/images_inference.txt \
+  --checkpoint_filepath=./pretrained_models/adobe_dpe/deeplpf_validpsnr_23.378_validloss_0.033_testpsnr_23.904_testloss_0.031_epoch_424_model.pt
+```
+
+## Notes on faithfulness
+
+- The pretrained `adobe_dpe` checkpoint reproduces its 2020 per-image PSNR on
+  the bundled examples under the current code (see `tests/test_replication.py`).
+  Running it over your full prepared test split is the Tier-2 check that the
+  end-to-end pipeline matches the paper's 23.90 dB / 0.911 SSIM.
+- Results can drift slightly from the 2020 paper for two reasons independent of
+  your data: the best-guess splits above, and PyTorch version differences
+  (the paper used 1.7.1). Both are usually small.
+
+## Sources
+
+- MIT-Adobe FiveK: <https://data.csail.mit.edu/graphics/fivek/>
+- FiveK preparation with Lightroom: <https://github.com/yuanming-hu/exposure/wiki/Preparing-data-for-the-MIT-Adobe-FiveK-Dataset-with-Lightroom>
+- Deep Photo Enhancer (DPE): <https://github.com/nothinglo/Deep-Photo-Enhancer>
