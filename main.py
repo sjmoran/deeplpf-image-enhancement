@@ -19,8 +19,10 @@ Instructions:
 
 To get this code working on your system / problem please see the README.
 
-*** BATCH SIZE: Note this code is designed for a batch size of 1. The code needs re-engineered to support higher batch sizes. Using higher batch sizes is not supported currently and could lead to artefacts. To replicate our reported results 
-please use a batch size of 1 only ***
+BATCH SIZE: training supports a batch size greater than one via --batch_size.
+Evaluation and inference run at a batch size of 1 so per-image PSNR/SSIM are
+reported and saved individually. To reproduce the paper's reported results,
+train with a batch size of 1.
 '''
 import model
 import metric
@@ -51,11 +53,10 @@ def main():
     dataset, periodically evaluating on the validation and test splits and
     saving the best-PSNR checkpoint.
 
-    Note: the code only supports a batch size of 1. Remove the ``exit()`` call
-    below (kept as a guard) before running.
+    Training supports a batch size greater than one via ``--batch_size``;
+    evaluation and inference run at a batch size of 1 so per-image PSNR/SSIM are
+    reported and saved individually.
     """
-    print("*** Before running this code ensure you keep the default batch size of 1. The code has not been engineered to support higher batch sizes. See README for more detail. Remove the exit() statement to use code. ***")
-    exit()
 
     writer = SummaryWriter()
 
@@ -73,6 +74,8 @@ def main():
 
     parser.add_argument(
         "--num_epoch", type=int, required=False, help="Number of epochs (default 100000)", default=100000)
+    parser.add_argument(
+        "--batch_size", type=int, required=False, help="Training batch size (default 1)", default=1)
     parser.add_argument(
         "--valid_every", type=int, required=False, help="Number of epochs after which to compute validation accuracy",
         default=25)
@@ -99,6 +102,7 @@ def main():
 
     args = parser.parse_args()
     num_epoch = args.num_epoch
+    batch_size = args.batch_size
     valid_every = args.valid_every
     checkpoint_filepath = args.checkpoint_filepath
     inference_img_dirpath = args.inference_img_dirpath
@@ -129,7 +133,10 @@ def main():
         device = torch.device("cpu")
     logging.info('Using device: ' + str(device))
 
-    BATCH_SIZE=1  # *** WARNING: batch size of > 1 not supported in current version of code ***
+    # Training batch size (configurable). Evaluation and inference always run at
+    # a batch size of 1 so per-image PSNR/SSIM are reported and saved.
+    BATCH_SIZE = batch_size
+    logging.info('Training batch size: ' + str(BATCH_SIZE))
 
     if (checkpoint_filepath is not None) and (inference_img_dirpath is not None):
 
@@ -149,8 +156,7 @@ def main():
                                     transform=transforms.Compose([transforms.ToTensor()]), normaliser=1,
                                     is_inference=True)
 
-        assert(BATCH_SIZE==1)
-        inference_data_loader = torch.utils.data.DataLoader(inference_dataset, batch_size=BATCH_SIZE, shuffle=False,
+        inference_data_loader = torch.utils.data.DataLoader(inference_dataset, batch_size=1, shuffle=False,
                                                             num_workers=6)
 
         '''
@@ -173,8 +179,6 @@ def main():
 
     else:
 
-        assert(BATCH_SIZE==1)
-
         training_data_loader = Adobe5kDataLoader(data_dirpath=training_img_dirpath,
                                                  img_ids_filepath=train_img_list_path)
         training_data_dict = training_data_loader.load_data()
@@ -193,9 +197,10 @@ def main():
 
         training_data_loader = torch.utils.data.DataLoader(training_dataset, batch_size=BATCH_SIZE, shuffle=True,
                                                        num_workers=6)
-        testing_data_loader = torch.utils.data.DataLoader(testing_dataset, batch_size=BATCH_SIZE, shuffle=False,
+        # Evaluation runs at batch size 1 so per-image metrics are reported/saved.
+        testing_data_loader = torch.utils.data.DataLoader(testing_dataset, batch_size=1, shuffle=False,
                                                       num_workers=6)
-        validation_data_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=BATCH_SIZE,
+        validation_data_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=1,
                                                          shuffle=False,
                                                          num_workers=6)
         net = model.DeepLPFNet()

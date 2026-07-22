@@ -324,50 +324,25 @@ class CubicFilter(nn.Module):
         y_axis = Variable(torch.arange(img.shape[3]).repeat(
             img.shape[2], 1).to(img.device)) / img.shape[3]
 
-        '''
-        Cubic for R channel
-        '''
-        cubic_mask[0, 0, :, :] = R[0, 0] * (x_axis ** 3) + R[0, 1] * (x_axis ** 2) * y_axis + R[0, 2] * (
-            x_axis ** 2) * img[0, 0, :, :] + R[0, 3] * (x_axis ** 2) + R[0, 4] * x_axis * (y_axis ** 2) + R[
-            0, 5] * x_axis * y_axis * img[0, 0, :, :] \
-            + R[0, 6] * x_axis * y_axis + R[0, 7] * x_axis * (img[0, 0, :, :] ** 2) + R[
-            0, 8] * x_axis * img[0, 0, :, :] + R[0, 9] * x_axis + R[0, 10] * (
-            y_axis ** 3) + R[0, 11] * (y_axis ** 2) * img[0, 0, :, :] \
-            + R[0, 12] * (y_axis ** 2) + R[0, 13] * y_axis * (img[0, 0, :, :] ** 2) + R[
-            0, 14] * y_axis * img[0, 0, :, :] + R[0, 15] * y_axis + R[0, 16] * (
-            img[0, 0, :, :] ** 3) + R[0, 17] * (img[0, 0, :, :] ** 2) \
-            + R[0, 18] * \
-            img[0, 0, :, :] + R[0, 19]
-
-        '''
-        Cubic for G channel
-        '''
-        cubic_mask[0, 1, :, :] = R[0, 20] * (x_axis ** 3) + R[0, 21] * (x_axis ** 2) * y_axis + R[0, 22] * (
-            x_axis ** 2) * img[0, 1, :, :] + R[0, 23] * (x_axis ** 2) + R[0, 24] * x_axis * (y_axis ** 2) + R[
-            0, 25] * x_axis * y_axis * img[0, 1, :, :] \
-            + R[0, 26] * x_axis * y_axis + R[0, 27] * x_axis * (img[0, 1, :, :] ** 2) + R[
-            0, 28] * x_axis * img[0, 1, :, :] + R[0, 29] * x_axis + R[0, 30] * (
-            y_axis ** 3) + R[0, 31] * (y_axis ** 2) * img[0, 1, :, :] \
-            + R[0, 32] * (y_axis ** 2) + R[0, 33] * y_axis * (img[0, 1, :, :] ** 2) + R[
-            0, 34] * y_axis * img[0, 1, :, :] + R[0, 35] * y_axis + R[0, 36] * (
-            img[0, 1, :, :] ** 3) + R[0, 37] * (img[0, 1, :, :] ** 2) \
-            + R[0, 38] * \
-            img[0, 1, :, :] + R[0, 39]
-
-        '''
-        Cubic for B channel
-        '''
-        cubic_mask[0, 2, :, :] = R[0, 40] * (x_axis ** 3) + R[0, 41] * (x_axis ** 2) * y_axis + R[0, 42] * (
-            x_axis ** 2) * img[0, 2, :, :] + R[0, 43] * (x_axis ** 2) + R[0, 44] * x_axis * (y_axis ** 2) + R[
-            0, 45] * x_axis * y_axis * img[0, 2, :, :] \
-            + R[0, 46] * x_axis * y_axis + R[0, 47] * x_axis * (img[0, 2, :, :] ** 2) + R[
-            0, 48] * x_axis * img[0, 2, :, :] + R[0, 49] * x_axis + R[0, 50] * (
-            y_axis ** 3) + R[0, 51] * (y_axis ** 2) * img[0, 2, :, :] \
-            + R[0, 52] * (y_axis ** 2) + R[0, 53] * y_axis * (img[0, 2, :, :] ** 2) + R[
-            0, 54] * y_axis * img[0, 2, :, :] + R[0, 55] * y_axis + R[0, 56] * (
-            img[0, 2, :, :] ** 3) + R[0, 57] * (img[0, 2, :, :] ** 2) \
-            + R[0, 58] * \
-            img[0, 2, :, :] + R[0, 59]
+        # Evaluate the per-pixel cubic polynomial for every image in the batch
+        # and every RGB channel. R has shape (B, 60): 20 coefficients per channel.
+        # The x/y coordinate grids are shared across the batch; the coefficients
+        # are reshaped to (B, 1, 1) so they broadcast over the (B, H, W) grids.
+        for c in range(3):
+            base = 20 * c
+            img_c = img[:, c, :, :]  # (B, H, W)
+            r = [R[:, base + k].view(-1, 1, 1) for k in range(20)]
+            cubic_mask[:, c, :, :] = r[0] * (x_axis ** 3) + r[1] * (x_axis ** 2) * y_axis + r[2] * (
+                x_axis ** 2) * img_c + r[3] * (x_axis ** 2) + r[4] * x_axis * (y_axis ** 2) + r[
+                5] * x_axis * y_axis * img_c \
+                + r[6] * x_axis * y_axis + r[7] * x_axis * (img_c ** 2) + r[
+                8] * x_axis * img_c + r[9] * x_axis + r[10] * (
+                y_axis ** 3) + r[11] * (y_axis ** 2) * img_c \
+                + r[12] * (y_axis ** 2) + r[13] * y_axis * (img_c ** 2) + r[
+                14] * y_axis * img_c + r[15] * y_axis + r[16] * (
+                img_c ** 3) + r[17] * (img_c ** 2) \
+                + r[18] * \
+                img_c + r[19]
 
         img_cubic = torch.clamp(img + cubic_mask, 0, 1)
         return img_cubic
@@ -444,36 +419,39 @@ class GraduatedFilter(nn.Module):
         :rtype: Tensor
 
         """
-        if (invert == 1).all():
+        # factor, invert, d1, d2 have shape (B,); top_line has shape (B, H, W).
+        # The original code branched with `(invert == 1).all()` / `(factor >= 1).all()`,
+        # which collapses the batch to a single decision. To support a batch whose
+        # images take different branches, all four branch expressions are evaluated
+        # and selected per image with torch.where; the clamp bounds (which depend
+        # only on factor >= 1) are likewise applied element-wise.
+        f = factor.view(-1, 1, 1)
+        d1 = d1.view(-1, 1, 1)
+        d2 = d2.view(-1, 1, 1)
+        inv = (invert == 1).view(-1, 1, 1)
+        fac_ge1 = (factor >= 1).view(-1, 1, 1)
 
-            if (factor >= 1).all():
-                diff = ((factor-1))/2 + 1
-                grad1 = (diff-factor)/d1
-                grad2 = (1-diff)/d2
-                mask_scale = torch.clamp(
-                    factor+grad1*top_line+grad2*top_line, min=1, max=max_scale)
-            else:
-                diff = ((1-factor))/2 + factor
-                grad1 = (diff-factor)/d1
-                grad2 = (1-diff)/d2
-                mask_scale = torch.clamp(
-                    factor+grad1*top_line+grad2*top_line, min=0, max=1)
-        else:
+        # invert == 1
+        diff_inv_hi = (f - 1) / 2 + 1
+        m_inv_hi = f + ((diff_inv_hi - f) / d1) * top_line + ((1 - diff_inv_hi) / d2) * top_line
+        diff_inv_lo = (1 - f) / 2 + f
+        m_inv_lo = f + ((diff_inv_lo - f) / d1) * top_line + ((1 - diff_inv_lo) / d2) * top_line
+        # invert != 1
+        diff_non_hi = (f - 1) / 2 + 1
+        m_non_hi = 1 + ((diff_non_hi - f) / d1) * top_line + ((f - diff_non_hi) / d2) * top_line
+        diff_non_lo = (1 - f) / 2 + f
+        m_non_lo = 1 + ((diff_non_lo - 1) / d1) * top_line + ((f - diff_non_lo) / d2) * top_line
 
-            if (factor >= 1).all():
-                diff = ((factor-1))/2 + 1
-                grad1 = (diff-factor)/d1
-                grad2 = (factor-diff)/d2
-                mask_scale = torch.clamp(
-                    1+grad1*top_line+grad2*top_line, min=1, max=max_scale)
-            else:
-                diff = ((1-factor))/2 + factor
-                grad1 = (diff-1)/d1
-                grad2 = (factor-diff)/d2
-                mask_scale = torch.clamp(
-                    1+grad1*top_line+grad2*top_line, min=0, max=1)
+        mask_scale = torch.where(inv,
+                                 torch.where(fac_ge1, m_inv_hi, m_inv_lo),
+                                 torch.where(fac_ge1, m_non_hi, m_non_lo))
 
-        mask_scale = torch.clamp(mask_scale.unsqueeze(0), 0, max_scale)
+        # factor >= 1 branches clamp to [1, max_scale]; factor < 1 branches to [0, 1].
+        lower = torch.where(fac_ge1, torch.ones_like(f), torch.zeros_like(f))
+        upper = torch.where(fac_ge1, torch.full_like(f, float(max_scale)), torch.ones_like(f))
+        mask_scale = torch.minimum(torch.maximum(mask_scale, lower), upper)
+
+        mask_scale = torch.clamp(mask_scale, 0, max_scale)
         return mask_scale
 
     def get_graduated_mask(self, feat, img):
@@ -510,41 +488,45 @@ class GraduatedFilter(nn.Module):
         x = self.dropout(x)
         G = self.fc_graduated(x)
 
-        # Classification values (above or below the line)
-        above_or_below_line1 = ((self.bin_layer(G[0, 0]))+1)/2
-        above_or_below_line2 = ((self.bin_layer(G[0, 1]))+1)/2
-        above_or_below_line3 = ((self.bin_layer(G[0, 2]))+1)/2
+        # Classification values (above or below the line). G has shape (B, 24);
+        # every parameter below is a per-image vector of shape (B,).
+        above_or_below_line1 = ((self.bin_layer(G[:, 0]))+1)/2
+        above_or_below_line2 = ((self.bin_layer(G[:, 1]))+1)/2
+        above_or_below_line3 = ((self.bin_layer(G[:, 2]))+1)/2
 
-        slope1 = G[0, 3].clone()
-        slope2 = G[0, 4].clone()
-        slope3 = G[0, 5].clone()
+        slope1 = G[:, 3].clone()
+        slope2 = G[:, 4].clone()
+        slope3 = G[:, 5].clone()
 
-        y_axis_dist1 = self.tanh01(G[0, 6]) + eps
-        y_axis_dist2 = self.tanh01(G[0, 7]) + eps
-        y_axis_dist3 = self.tanh01(G[0, 8]) + eps
+        y_axis_dist1 = self.tanh01(G[:, 6]) + eps
+        y_axis_dist2 = self.tanh01(G[:, 7]) + eps
+        y_axis_dist3 = self.tanh01(G[:, 8]) + eps
 
-        y_axis_dist1 = torch.clamp(self.tanh01(G[0, 9]), y_axis_dist1.data, 1.0)
-        y_axis_dist2 = torch.clamp(self.tanh01(G[0, 10]), y_axis_dist2.data, 1.0)
-        y_axis_dist3 = torch.clamp(self.tanh01(G[0, 11]), y_axis_dist3.data, 1.0)
+        # clamp to [y_axis_distN, 1.0]; expressed with maximum/clamp because modern
+        # torch.clamp does not accept a tensor min together with a scalar max.
+        y_axis_dist1 = torch.clamp(torch.maximum(self.tanh01(G[:, 9]), y_axis_dist1.data), max=1.0)
+        y_axis_dist2 = torch.clamp(torch.maximum(self.tanh01(G[:, 10]), y_axis_dist2.data), max=1.0)
+        y_axis_dist3 = torch.clamp(torch.maximum(self.tanh01(G[:, 11]), y_axis_dist3.data), max=1.0)
 
-        y_axis_dist4= torch.clamp(self.tanh01(G[0, 12]), 0, y_axis_dist1.data)
-        y_axis_dist5 = torch.clamp(self.tanh01(G[0, 13]), 0, y_axis_dist2.data)
-        y_axis_dist6 = torch.clamp(self.tanh01(G[0, 14]), 0, y_axis_dist3.data)
+        # clamp to [0, y_axis_distN]
+        y_axis_dist4 = torch.clamp(torch.minimum(self.tanh01(G[:, 12]), y_axis_dist1.data), min=0)
+        y_axis_dist5 = torch.clamp(torch.minimum(self.tanh01(G[:, 13]), y_axis_dist2.data), min=0)
+        y_axis_dist6 = torch.clamp(torch.minimum(self.tanh01(G[:, 14]), y_axis_dist3.data), min=0)
 
         # Scales
         max_scale = 2
 
-        scale_factor1 = self.tanh01(G[0, 15]) * max_scale
-        scale_factor2 = self.tanh01(G[0, 16]) * max_scale
-        scale_factor3 = self.tanh01(G[0, 17]) * max_scale
+        scale_factor1 = self.tanh01(G[:, 15]) * max_scale
+        scale_factor2 = self.tanh01(G[:, 16]) * max_scale
+        scale_factor3 = self.tanh01(G[:, 17]) * max_scale
 
-        scale_factor4 = self.tanh01(G[0, 18]) * max_scale
-        scale_factor5 = self.tanh01(G[0, 19]) * max_scale
-        scale_factor6 = self.tanh01(G[0, 20]) * max_scale
+        scale_factor4 = self.tanh01(G[:, 18]) * max_scale
+        scale_factor5 = self.tanh01(G[:, 19]) * max_scale
+        scale_factor6 = self.tanh01(G[:, 20]) * max_scale
 
-        scale_factor7 = self.tanh01(G[0, 21]) * max_scale
-        scale_factor8 = self.tanh01(G[0, 22]) * max_scale
-        scale_factor9= self.tanh01(G[0, 23]) * max_scale
+        scale_factor7 = self.tanh01(G[:, 21]) * max_scale
+        scale_factor8 = self.tanh01(G[:, 22]) * max_scale
+        scale_factor9= self.tanh01(G[:, 23]) * max_scale
 
         slope1_angle = torch.atan(slope1)
         slope2_angle = torch.atan(slope2)
@@ -558,13 +540,16 @@ class GraduatedFilter(nn.Module):
         d5 = self.tanh01(y_axis_dist3*torch.cos(slope3_angle))
         d6 = self.tanh01(y_axis_dist6*torch.cos(slope3_angle))
 
-        top_line1 = self.tanh01(y_axis - (slope1 * x_axis + y_axis_dist1 + d1))
-        top_line2 = self.tanh01(y_axis - (slope2 * x_axis + y_axis_dist2 + d3))
-        top_line3 = self.tanh01(y_axis - (slope3 * x_axis + y_axis_dist3 + d5))
+        # Broadcast the per-image line parameters (B,) over the (H, W) grid -> (B, H, W)
+        top_line1 = self.tanh01(y_axis - (slope1.view(-1, 1, 1) * x_axis + y_axis_dist1.view(-1, 1, 1) + d1.view(-1, 1, 1)))
+        top_line2 = self.tanh01(y_axis - (slope2.view(-1, 1, 1) * x_axis + y_axis_dist2.view(-1, 1, 1) + d3.view(-1, 1, 1)))
+        top_line3 = self.tanh01(y_axis - (slope3.view(-1, 1, 1) * x_axis + y_axis_dist3.view(-1, 1, 1) + d5.view(-1, 1, 1)))
 
         '''
         The following are the scale factors for each of the 9 graduated filters
         '''
+        # Each get_inverted_mask returns (B, H, W); stack the three per-channel
+        # scalings along a new channel dim -> (B, 3, H, W).
         mask_scale1 = self.get_inverted_mask(
             scale_factor1, above_or_below_line1, d1, d2, max_scale, top_line1)
         mask_scale2 = self.get_inverted_mask(
@@ -572,9 +557,9 @@ class GraduatedFilter(nn.Module):
         mask_scale3 = self.get_inverted_mask(
             scale_factor3, above_or_below_line1, d1, d2, max_scale, top_line1)
 
-        mask_scale_1 = torch.cat(
-            (mask_scale1, mask_scale2, mask_scale3), dim=0)
-        mask_scale_1 = torch.clamp(mask_scale_1.unsqueeze(0), 0, max_scale)
+        mask_scale_1 = torch.stack(
+            (mask_scale1, mask_scale2, mask_scale3), dim=1)
+        mask_scale_1 = torch.clamp(mask_scale_1, 0, max_scale)
 
         mask_scale4 = self.get_inverted_mask(
             scale_factor4, above_or_below_line2, d3, d4, max_scale, top_line2)
@@ -583,9 +568,9 @@ class GraduatedFilter(nn.Module):
         mask_scale6 = self.get_inverted_mask(
             scale_factor6, above_or_below_line2, d3, d4, max_scale, top_line2)
 
-        mask_scale_4 = torch.cat(
-            (mask_scale4, mask_scale5, mask_scale6), dim=0)
-        mask_scale_4 = torch.clamp(mask_scale_4.unsqueeze(0), 0, max_scale)
+        mask_scale_4 = torch.stack(
+            (mask_scale4, mask_scale5, mask_scale6), dim=1)
+        mask_scale_4 = torch.clamp(mask_scale_4, 0, max_scale)
 
         mask_scale7 = self.get_inverted_mask(
             scale_factor7, above_or_below_line3, d5, d6, max_scale, top_line3)
@@ -594,9 +579,9 @@ class GraduatedFilter(nn.Module):
         mask_scale9 = self.get_inverted_mask(
             scale_factor9, above_or_below_line3, d5, d6, max_scale, top_line3)
 
-        mask_scale_7 = torch.cat(
-            (mask_scale7, mask_scale8, mask_scale9), dim=0)
-        mask_scale_7 = torch.clamp(mask_scale_7.unsqueeze(0), 0, max_scale)
+        mask_scale_7 = torch.stack(
+            (mask_scale7, mask_scale8, mask_scale9), dim=1)
+        mask_scale_7 = torch.clamp(mask_scale_7, 0, max_scale)
 
         mask_scale = torch.clamp(
             mask_scale_1*mask_scale_4*mask_scale_7, 0, max_scale)
@@ -689,7 +674,8 @@ class EllipticalFilter(nn.Module):
         mask_scale = self.where(ellipse_equation_part1+ellipse_equation_part2 < 1,
                                 (torch.sqrt((x_axis - shift_x) ** 2 + (y_axis - shift_y) ** 2 + eps) * (1 - scale_factor)) / radius + scale_factor, 1)
 
-        mask_scale = torch.clamp(mask_scale.unsqueeze(0), 0, max_scale)
+        # Returns a (B, H, W) per-image, per-ellipse scaling map.
+        mask_scale = torch.clamp(mask_scale, 0, max_scale)
 
         return mask_scale
 
@@ -736,45 +722,47 @@ class EllipticalFilter(nn.Module):
         y_axis = Variable(torch.arange(img.shape[3]).repeat(
             img.shape[2], 1).to(img.device)) / img.shape[3]
 
+        # G has shape (B, 24). Each ellipse parameter is a per-image vector
+        # reshaped to (B, 1, 1) so it broadcasts over the (H, W) coordinate grids.
         # Centre of ellipse, x-coordinate
-        x_coord1 = self.tanh01(G[0, 0]) + eps1
-        x_coord2 = self.tanh01(G[0, 1]) + eps1
-        x_coord3 = self.tanh01(G[0, 2]) + eps1
+        x_coord1 = (self.tanh01(G[:, 0]) + eps1).view(-1, 1, 1)
+        x_coord2 = (self.tanh01(G[:, 1]) + eps1).view(-1, 1, 1)
+        x_coord3 = (self.tanh01(G[:, 2]) + eps1).view(-1, 1, 1)
 
         # Centre of ellipse, y-coordinate
-        y_coord1 = self.tanh01(G[0, 3]) + eps1
-        y_coord2 = self.tanh01(G[0, 4]) + eps1
-        y_coord3 = self.tanh01(G[0, 5]) + eps1
+        y_coord1 = (self.tanh01(G[:, 3]) + eps1).view(-1, 1, 1)
+        y_coord2 = (self.tanh01(G[:, 4]) + eps1).view(-1, 1, 1)
+        y_coord3 = (self.tanh01(G[:, 5]) + eps1).view(-1, 1, 1)
 
         # a value of ellipse
-        a1 = self.tanh01(G[0, 6]) + eps1
-        a2 = self.tanh01(G[0, 7]) + eps1
-        a3 = self.tanh01(G[0, 8]) + eps1
+        a1 = (self.tanh01(G[:, 6]) + eps1).view(-1, 1, 1)
+        a2 = (self.tanh01(G[:, 7]) + eps1).view(-1, 1, 1)
+        a3 = (self.tanh01(G[:, 8]) + eps1).view(-1, 1, 1)
 
         # b value
-        b1 = self.tanh01(G[0, 9]) + eps1
-        b2 = self.tanh01(G[0, 10]) + eps1
-        b3 = self.tanh01(G[0, 11]) + eps1
+        b1 = (self.tanh01(G[:, 9]) + eps1).view(-1, 1, 1)
+        b2 = (self.tanh01(G[:, 10]) + eps1).view(-1, 1, 1)
+        b3 = (self.tanh01(G[:, 11]) + eps1).view(-1, 1, 1)
 
         # A value is angle to the x-axis
-        A1 = self.tanh01(G[0, 12]) * math.pi + eps1
-        A2 = self.tanh01(G[0, 13]) * math.pi + eps1
-        A3 = self.tanh01(G[0, 14]) * math.pi + eps1
+        A1 = (self.tanh01(G[:, 12]) * math.pi + eps1).view(-1, 1, 1)
+        A2 = (self.tanh01(G[:, 13]) * math.pi + eps1).view(-1, 1, 1)
+        A3 = (self.tanh01(G[:, 14]) * math.pi + eps1).view(-1, 1, 1)
 
         '''
         The following are the scale factors for each of the 9 ellipses
         '''
-        scale1 = self.tanh01(G[0, 15]) * max_scale + eps1 
-        scale2 = self.tanh01(G[0, 16]) * max_scale + eps1
-        scale3 = self.tanh01(G[0, 17]) * max_scale + eps1
+        scale1 = (self.tanh01(G[:, 15]) * max_scale + eps1).view(-1, 1, 1)
+        scale2 = (self.tanh01(G[:, 16]) * max_scale + eps1).view(-1, 1, 1)
+        scale3 = (self.tanh01(G[:, 17]) * max_scale + eps1).view(-1, 1, 1)
 
-        scale4  = self.tanh01(G[0, 18]) * max_scale + eps1
-        scale5 = self.tanh01(G[0, 19]) * max_scale + eps1
-        scale6 = self.tanh01(G[0, 20]) * max_scale + eps1
+        scale4 = (self.tanh01(G[:, 18]) * max_scale + eps1).view(-1, 1, 1)
+        scale5 = (self.tanh01(G[:, 19]) * max_scale + eps1).view(-1, 1, 1)
+        scale6 = (self.tanh01(G[:, 20]) * max_scale + eps1).view(-1, 1, 1)
 
-        scale7 = self.tanh01(G[0, 21]) * max_scale + eps1
-        scale8 = self.tanh01(G[0, 22]) * max_scale + eps1
-        scale9 = self.tanh01(G[0, 23]) * max_scale + eps1
+        scale7 = (self.tanh01(G[:, 21]) * max_scale + eps1).view(-1, 1, 1)
+        scale8 = (self.tanh01(G[:, 22]) * max_scale + eps1).view(-1, 1, 1)
+        scale9 = (self.tanh01(G[:, 23]) * max_scale + eps1).view(-1, 1, 1)
 
         ############ Angle of orientation of the ellipses with respect to the y semi-axis
         angle_1 = torch.acos(torch.clamp((y_axis-y_coord1) / 
@@ -808,9 +796,9 @@ class EllipticalFilter(nn.Module):
                                     shift_x=x_coord1, shift_y=y_coord1, semi_axis_x=a1, semi_axis_y=b1, alpha=angle_1, scale_factor=scale3,
                                     radius=radius_1)
 
-        mask_scale_1 = torch.cat(
-            (mask_scale1, mask_scale2, mask_scale3), dim=0)
-        mask_scale_1_rad = torch.clamp(mask_scale_1.unsqueeze(0), 0, max_scale)
+        mask_scale_1 = torch.stack(
+            (mask_scale1, mask_scale2, mask_scale3), dim=1)
+        mask_scale_1_rad = torch.clamp(mask_scale_1, 0, max_scale)
 
         ############ Scaling factors for the R,G,B channels, here we learn three ellipses
         mask_scale4 = self.get_mask(x_axis, y_axis,
@@ -825,9 +813,9 @@ class EllipticalFilter(nn.Module):
                                     shift_x=x_coord2, shift_y=y_coord2, semi_axis_x=a2, semi_axis_y=b3, alpha=angle_2, scale_factor=scale6,
                                     radius=radius_2)
 
-        mask_scale_4 = torch.cat(
-            (mask_scale4, mask_scale5, mask_scale6), dim=0)
-        mask_scale_4_rad = torch.clamp(mask_scale_4.unsqueeze(0), 0, max_scale)
+        mask_scale_4 = torch.stack(
+            (mask_scale4, mask_scale5, mask_scale6), dim=1)
+        mask_scale_4_rad = torch.clamp(mask_scale_4, 0, max_scale)
 
         ############ Scaling factors for the R,G,B channels, here we learn three ellipses
         mask_scale7 = self.get_mask(x_axis, y_axis,
@@ -842,9 +830,9 @@ class EllipticalFilter(nn.Module):
                                     shift_x=x_coord3, shift_y=y_coord3, semi_axis_x=a3, semi_axis_y=b3, alpha=angle_3, scale_factor=scale9,
                                     radius=radius_3)
 
-        mask_scale_7 = torch.cat(
-            (mask_scale7, mask_scale8, mask_scale9), dim=0)
-        mask_scale_7_rad = torch.clamp(mask_scale_7.unsqueeze(0), 0, max_scale)
+        mask_scale_7 = torch.stack(
+            (mask_scale7, mask_scale8, mask_scale9), dim=1)
+        mask_scale_7_rad = torch.clamp(mask_scale_7, 0, max_scale)
 
         ############ Mix the ellipses together by multiplication
         mask_scale_elliptical = torch.clamp(
