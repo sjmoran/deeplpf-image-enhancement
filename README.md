@@ -129,6 +129,10 @@ This repository contains the code, the pre-trained models, and instructions for 
   </tr>
 </table>
 
+### Original (CVPR 2020) code
+
+This repository has been updated since publication: it now runs device-agnostically on a CUDA GPU, Apple Silicon (MPS), or CPU, supports a training batch size greater than one, works with current dependencies, and has a test suite run in CI. The code exactly as published for the CVPR 2020 paper is preserved at the [`legacy`](https://github.com/sjmoran/deeplpf-image-enhancement/tree/legacy) branch and the [`original-cvpr2020`](https://github.com/sjmoran/deeplpf-image-enhancement/releases/tag/original-cvpr2020) tag.
+
 ### Dependencies
 
 _requirements.txt_ lists the Python packages used by the code; install them with `pip install -r requirements.txt`.
