@@ -6,11 +6,17 @@ produced in 2020 (the ``TEST_425`` tag == epoch 424). This test runs that same
 checkpoint through the repo's inference pipeline on those five images and
 asserts the PSNR still matches.
 
-Tolerance is deliberately generous. On the reference platform four of the five
-images reproduce PSNR to three decimals; a4774 sits near a BinaryLayer
-above/below-line decision and drifts ~0.8 dB across torch versions. The test
-guards against real regressions (a broken filter shifts PSNR by many dB), not
-against last-digit numerical noise, and stays robust across platforms.
+Four of the five images reproduce PSNR to three decimals across a five-year
+torch gap and a CUDA->CPU switch, so they are checked to a tight 0.5 dB
+tolerance -- a meaningful regression guard.
+
+a4774 is excluded from the value check: its stored input file does not match
+the input that produced its reference result. The model is numerically stable
+(fp32 vs fp64 agree to ~1e-6) yet its output for a4774 differs from the shipped
+enhanced image by ~26/255, an order of magnitude more than the others (~2-6/255,
+i.e. JPEG noise) -- only possible if the input differs. It is the only example
+whose input filename lacks the ``_input`` suffix. a4774 is still run (it must
+produce a valid output), just not asserted against the stale reference value.
 """
 import glob
 import os
@@ -24,23 +30,26 @@ from data import Adobe5kDataLoader, Dataset
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Reference PSNR/SSIM parsed from the shipped TEST_425 (epoch-424) filenames.
+# Reference PSNR parsed from the shipped TEST_425 (epoch-424) filenames.
 REFERENCE = {
     "a4576": 34.596,
     "a4582": 18.942,
     "a4591": 28.000,
     "a4742": 29.825,
-    "a4774": 24.233,
 }
-PSNR_TOL_DB = 2.0
+# a4774 is run but not value-checked: its stored input file is mismatched
+# (see module docstring). It must still be exported by the pipeline.
+KNOWN_MISMATCH = {"a4774"}
+PSNR_TOL_DB = 0.5
 
 
 def test_pretrained_checkpoint_reproduces_reference(tmp_path):
     ckpts = glob.glob(os.path.join(ROOT, "pretrained_models", "adobe_dpe", "*.pt"))
     assert ckpts, "adobe_dpe checkpoint not found"
 
+    all_ids = list(REFERENCE) + sorted(KNOWN_MISMATCH)
     id_list = tmp_path / "ids.txt"
-    id_list.write_text("\n".join(REFERENCE) + "\n")
+    id_list.write_text("\n".join(all_ids) + "\n")
 
     net = model.DeepLPFNet()
     net.load_state_dict(torch.load(ckpts[0], map_location="cpu"))
@@ -66,9 +75,11 @@ def test_pretrained_checkpoint_reproduces_reference(tmp_path):
         if m:
             produced[iid] = float(m.group(1))
 
-    missing = set(REFERENCE) - set(produced)
+    # Every id (including the known-mismatch one) must produce a valid output...
+    missing = set(all_ids) - set(produced)
     assert not missing, "no output produced for %s" % sorted(missing)
 
+    # ...but only the intact examples are checked against the reference PSNR.
     for iid, ref_psnr in REFERENCE.items():
         delta = abs(produced[iid] - ref_psnr)
         assert delta <= PSNR_TOL_DB, (
