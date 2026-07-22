@@ -177,7 +177,7 @@ year = {2020}
 
 ## License
 
-BSD-3-Clause License.
+Released under the BSD-3-Clause License — see [LICENSE](./LICENSE).
 
 ## Contributing
 
