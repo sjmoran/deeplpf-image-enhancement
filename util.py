@@ -144,11 +144,17 @@ class ImageProcessing(object):
         """Loads an image from file as a numpy multi-dimensional array
 
         :param img_filepath: filepath to the image
+        :param normaliser: value to divide the pixel intensities by (e.g. 255)
         :returns: image as a multi-dimensional numpy array
         :rtype: multi-dimensional numpy array
 
         """
-        img = ImageProcessing.normalise_image(np.array(Image.open(img_filepath)), normaliser)  # NB: imread normalises to 0-1
+        img = np.array(Image.open(img_filepath))
+        if img.ndim == 3 and img.shape[2] == 4:
+            # Drop an alpha channel if present (RGBA -> RGB); the network is
+            # trained on 3-channel RGB input.
+            img = img[:, :, :3]
+        img = ImageProcessing.normalise_image(img, normaliser)  # NB: imread normalises to 0-1
 
         return img
 
