@@ -161,6 +161,8 @@ DeepLPF is trained on the [MIT-Adobe FiveK](https://data.csail.mit.edu/graphics/
 
 This repository has been updated since publication: it runs device-agnostically on a CUDA GPU, Apple Silicon (MPS), or CPU, supports a training batch size greater than one, works with current dependencies, and has a test suite run in CI. The code exactly as published for the paper is preserved at the [`legacy`](https://github.com/sjmoran/deeplpf-image-enhancement/tree/legacy) branch and the [`original-cvpr2020`](https://github.com/sjmoran/deeplpf-image-enhancement/releases/tag/original-cvpr2020) tag.
 
+These changes are non-impacting for paper reproduction: a per-change static audit plus the CI faithfulness guard confirm the pretrained checkpoint still reproduces its 2020 per-image PSNR to within 0.5 dB on the batch=1 inference/eval path. See **[docs/REPLICATION_AUDIT.md](./docs/REPLICATION_AUDIT.md)** for the full analysis.
+
 ## Citation
 
 If you use DeepLPF, its pre-trained models, or this code in your research, please cite:
