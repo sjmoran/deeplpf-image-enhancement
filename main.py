@@ -110,7 +110,13 @@ def main():
 
     parser.add_argument(
         "--gate_weight", type=float, required=False, default=None,
-        help="weight on the gates L1 penalty (fixes=...,gates); default 3e-3")    parser.add_argument(
+        help="Weight on the L1 gate penalty of the `gates` feature, which is "
+             "what makes the number of active filter instances learned rather "
+             "than fixed at three per branch. Too small and every gate pins "
+             "at 1 (the published model); too large and the branches collapse "
+             "to the identity. Defaults to 3e-3.")
+
+    parser.add_argument(
         "--seed", type=int, required=False, default=None,
         help="Seed for torch, numpy and Python RNGs. Without it every run "
              "starts from a different initialisation and shuffle order, so "
