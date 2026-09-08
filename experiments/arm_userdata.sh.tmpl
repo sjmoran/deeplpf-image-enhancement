@@ -2,7 +2,7 @@
 # One ablation arm, start to finish, unattended. Runs as root at boot.
 #
 # Placeholders __ARM_NAME__, __FIX_SPEC__, __EPOCHS__, __HARD_CAP__,
-# __EXTRA_ARGS__ and
+# __EXTRA_ARGS__, __SPLIT_DIR__ (which split lists to copy in) and
 # __BUCKET__ are substituted by launch_ablation.sh.
 #
 # The instance is launched with instance-initiated-shutdown-behavior=terminate,
@@ -50,7 +50,7 @@ mkdir -p repo && tar xzf code.tgz -C repo
 tar xzf data.tgz
 # data.tgz carries a copy of adobe5k_dpe/ from whenever it was built, so the
 # split lists in it can be stale. The repository is the source of truth.
-cp -f repo/adobe5k_dpe/images_*.txt adobe5k_dpe/
+cp -f repo/__SPLIT_DIR__/images_*.txt adobe5k_dpe/
 echo "split in use: train $(wc -l < adobe5k_dpe/images_train.txt), valid $(wc -l < adobe5k_dpe/images_valid.txt), test $(wc -l < adobe5k_dpe/images_test.txt)"
 echo "staged $(ls adobe5k_dpe_data/input | wc -l) inputs, $(ls adobe5k_dpe_data/output | wc -l) targets"
 

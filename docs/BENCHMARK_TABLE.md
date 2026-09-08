@@ -33,7 +33,7 @@ inputs by tens of levels - see
 
 | Protocol | PSNR | SSIM | Reported by | Reproducible here? |
 |---|---|---|---|---|
-| DPE | 23.90 | 0.911 | this repository | **No** - see below |
+| best-guess split | 23.90 | 0.911 | this repository | not a DPE-protocol number, see below |
 | DPE | 23.93 | 0.903 | NamedCurves (ECCV 2024), Tab. 1 | not attempted |
 | UPE | 24.48 | 0.887 | NamedCurves Tab. 1; StarEnhancer (ICCV 2021) agree exactly | no UPE split shipped |
 | 3D-LUT 480p | 24.73 | 0.916 | AdaInt (CVPR 2022) Tab. 1; RSFNet (ICCV 2023) Tab. 1 agree | no 480p split shipped |
@@ -43,14 +43,61 @@ inputs by tens of levels - see
 | LOL | 16.58 | 0.678 | Zhao et al. ICCV 2021 | different dataset |
 | HDR+ | 25.73 | 0.902 | PQDynamicISP (2024) | different dataset |
 
-### The 23.90 figure needs a caveat
+### The 23.90 figure is not a DPE-protocol number
 
 It is this repository's own number for the released `adobe_dpe` checkpoint, and
 it was measured on the **best-guess split** this repository shipped until
 September 2026 - not on the DPE test set. The two test sets share 45 of ~500
-images. So 23.90 is not a DPE-protocol number and should not be compared with
-one. A like-for-like figure on the recovered lists has not yet been published
-here.
+images. So 23.90 should not be compared with a DPE-protocol number from another
+paper, in either direction.
+
+The guess was made because every official DPE link returned 404 and the lists
+could not be obtained; the reconstruction took `a4501`-`a5000`, 500 sequential
+ids, where DPE's test set is 498 scattered ids. It was present from the initial
+release commit `caf80d9`.
+
+**The released checkpoint cannot be evaluated on the recovered DPE split at
+all.** 453 of those 498 images are in its train or validation sets. Scoring it
+there returns 25.837 dB, which measures recall rather than enhancement:
+
+| Images | n | PSNR |
+|---|---|---|
+| in the guessed **train** set (memorised) | 222 | 28.896 |
+| in the guessed **valid** set (selected on, not trained) | 231 | 23.011 |
+| genuinely held out by that model | 45 | 25.257 |
+| all, as naively reported | 498 | **25.837** |
+
+The 5.9 dB gap between the first two rows is the memorisation, and it is what
+inflates the headline figure. The valid-set row (23.011) agrees with the 23.378
+recorded in the checkpoint's own filename, so the model is behaving normally -
+the split is what is confounded.
+
+### The only clean comparison, and what it says
+
+45 images sit in both test sets, and **neither** model trained on them: this
+repository's runs use the recovered train list, the released checkpoint used
+the guessed one. That is the sole like-for-like comparison available.
+
+| Model | PSNR on the shared 45 |
+|---|---|
+| released `adobe_dpe` | 25.257 |
+| this repository, retrained, `--fixes=none` | 24.963 |
+| paired difference | **-0.294 +/- 1.097** (95% CI) |
+
+The interval contains zero, so at n=45 the retrained model is indistinguishable
+from the released one. The honest claim is that the reproduction matches within
+the resolution of the available clean comparison - not a PSNR delta.
+
+For contrast, on the 222 images the released model trained on, it leads by
++5.811 dB. Capability and recall are easy to confuse when the split is unknown.
+
+### A caution about evaluation determinism
+
+Re-evaluating one retrained checkpoint gave 23.333 dB where the training run had
+logged 23.514 for the same weights on the same images, the difference being the
+device (MPS versus CUDA). That is the same order as the differences between
+model variants, so figures compared with each other should be produced by one
+evaluation pass on one device rather than taken from training logs.
 
 ### The DSN errata
 
@@ -113,7 +160,8 @@ authors, and adding them here, is the obvious next contribution to this page.
 ## What would make this table better
 
 - The 3D-LUT 480p split lists, which most current work uses.
-- A like-for-like DeepLPF number on the recovered DPE test set.
+- A DeepLPF number trained and tested wholly on the recovered DPE lists, which
+  the ablation in `docs/V2_ABLATION.md` is producing.
 - Verified SSIM figures. DPE's own released code defines SSIM and never calls
   it, and its `test.py` is a zero-byte file, so DPE-protocol SSIM comparisons
   rest on the papers alone.
