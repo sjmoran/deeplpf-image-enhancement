@@ -35,6 +35,17 @@ the model can express rather than correcting it. They are opt-in by name and
 are deliberately *not* included in ``'all'``, so that ``--fixes=all`` keeps
 meaning "every correction, and nothing else".
 
+``colour``
+    Apply a global colour mixer and per-channel tone curve to Y1 before the
+    cubic filter. Every existing head is diagonal - the cubic filter's
+    coefficients are per channel and every term multiplies that same channel -
+    so no filter in the published model can express white balance, saturation
+    or a hue shift, which is most of what the expert retouch does. The mixer
+    ``Y1' = M Y1 + b`` supplies the cross-channel term and the piecewise-linear
+    curve supplies a tone shape the cubic's fixed polynomial cannot. Both are
+    zero-initialised, so the feature is the identity at initialisation and the
+    model it starts from is exactly the published one.
+
 ``gates``
     Predict one gate per filter instance and scale that instance's deviation
     from neutral by it, so an instance can switch itself off. With an L1
@@ -51,18 +62,36 @@ Set the active fixes once at startup with :func:`configure`; read them with
 ALL_FIXES = ('wiring', 'ellipse', 'ste', 'msssim', 'fusion', 'blend')
 
 #: Opt-in capabilities, excluded from ``'all'`` (see the module docstring).
-FEATURES = ('gates',)
+FEATURES = ('gates', 'colour')
 
 #: Instances per filter branch that a gate can switch off.
 GATES_PER_BRANCH = 3
 
 PUBLISHED_GATE_WEIGHT = 3e-3
 
+#: Knots in the per-channel tone curve of the ``colour`` feature. 0 means the
+#: colour mixer alone, which is the ablation that separates the two halves.
+COLOUR_KNOTS = 16
+
 PUBLISHED_MSSSIM_WEIGHT = 1e-3
 
 _active = frozenset()
 _msssim_weight = PUBLISHED_MSSSIM_WEIGHT
 _gate_weight = PUBLISHED_GATE_WEIGHT
+_colour_knots = COLOUR_KNOTS
+
+
+def colour_knots():
+    """Knots in the ``colour`` feature's per-channel tone curve.
+
+    Zero disables the curve and leaves the colour mixer alone, which is the
+    arm that says which of the two halves carries any gain.
+
+    :returns: the active knot count
+    :rtype: int
+
+    """
+    return _colour_knots
 
 
 def gate_weight():
@@ -97,7 +126,7 @@ def msssim_weight():
     return _msssim_weight
 
 
-def configure(spec, msssim_weight=None, gate_weight=None):
+def configure(spec, msssim_weight=None, gate_weight=None, colour_knots=None):
     """Set the active fixes from a command-line spec.
 
     :param spec: ``'none'``, ``'all'``, or a comma-separated subset of
@@ -113,12 +142,13 @@ def configure(spec, msssim_weight=None, gate_weight=None):
     :raises ValueError: if a name is not one of :data:`ALL_FIXES`
 
     """
-    global _active, _msssim_weight, _gate_weight
+    global _active, _msssim_weight, _gate_weight, _colour_knots
 
     _msssim_weight = (PUBLISHED_MSSSIM_WEIGHT if msssim_weight is None
                       else float(msssim_weight))
     _gate_weight = (PUBLISHED_GATE_WEIGHT if gate_weight is None
                     else float(gate_weight))
+    _colour_knots = (COLOUR_KNOTS if colour_knots is None else int(colour_knots))
 
     spec = (spec or 'none').strip().lower()
     if spec == 'all':

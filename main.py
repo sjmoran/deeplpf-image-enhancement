@@ -117,6 +117,12 @@ def main():
              "to the identity. Defaults to 3e-3.")
 
     parser.add_argument(
+        "--colour_knots", type=int, required=False, default=None,
+        help="Knots in the per-channel tone curve of the `colour` feature. "
+             "0 leaves the global colour mixer alone, which is the ablation "
+             "that says which half carries any gain. Defaults to 16.")
+
+    parser.add_argument(
         "--seed", type=int, required=False, default=None,
         help="Seed for torch, numpy and Python RNGs. Without it every run "
              "starts from a different initialisation and shuffle order, so "
@@ -153,7 +159,8 @@ def main():
              "wiring,ellipse,ste,msssim. Default 'none'.")
 
     args = parser.parse_args()
-    active_fixes = fixes.configure(args.fixes, args.msssim_weight, args.gate_weight)
+    active_fixes = fixes.configure(args.fixes, args.msssim_weight, args.gate_weight,
+                                   args.colour_knots)
 
     if args.seed is not None:
         # Seed every source the training loop draws on: weight init, the
@@ -188,6 +195,8 @@ def main():
     logging.info('MS-SSIM weight: ' + str(fixes.msssim_weight()))
     if fixes.enabled('gates'):
         logging.info('Gate penalty weight: ' + str(fixes.gate_weight()))
+    if fixes.enabled('colour'):
+        logging.info('Colour curve knots: ' + str(fixes.colour_knots()))
     logging.info('v2 fixes enabled: ' + (', '.join(active_fixes) or 'none (v1 model)'))
     logging.info('Logging directory: ' + str(log_dirpath))
     logging.info('Dump validation accuracy every: ' + str(valid_every))

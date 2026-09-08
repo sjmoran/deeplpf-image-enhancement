@@ -1058,6 +1058,91 @@ class GlobalPoolingBlock(Block, nn.Module):
         return out
 
 
+class ColourHead(nn.Module):
+    """Global colour mixer and per-channel tone curve (the `colour` feature).
+
+    Every filter in the published model is diagonal: CubicFilter's coefficients
+    are reshaped to (B, 3, 1, 1) and every term of Eq. 6 multiplies that same
+    channel, and the graduated and elliptical branches only apply per-channel
+    gains. So no head can express a cross-channel operation - white balance,
+    saturation, a hue shift - although those are most of what the expert
+    retouch consists of. The U-Net can approximate them locally, which is why
+    this is a gap in the filter bank rather than in the model as a whole.
+
+    Two operators, both global and both interpretable:
+
+    ``M Y1 + b``
+        a 3x3 mixer and offset, the cross-channel term the model lacks. This
+        is the Calibration/white-balance panel of a raw converter.
+    ``i + sum_k w_ck relu(i - t_k)``
+        a piecewise-linear tone curve per channel with fixed knots, so the
+        slope on segment j is ``1 + sum_{k<=j} w_k`` and the learned curve
+        plots directly. Hinges rather than a gather, so the shape is static
+        and the op is safe to capture in a CUDA graph.
+
+    Neither operator clamps. Y1 is not bounded to [0, 1] where this runs - the
+    cubic filter clamps only after adding its residual - so a clamp here would
+    alter the image even with a zero prediction, and the feature would no
+    longer start from the published model.
+
+    Both are zero-initialised: at initialisation ``M = I``, ``b = 0``, ``w = 0``
+    and the head is exactly the identity, so turning the feature on does not
+    change the starting model. The layer is constructed after every other
+    module so that the RNG stream the existing parameters draw from is
+    untouched, and a run with this feature enabled starts from the same weights
+    as one without it at the same seed.
+
+    """
+
+    def __init__(self, in_channels=64, knots=16):
+        """Initialise the colour head.
+
+        :param in_channels: channels of the pooled (features, image) input
+        :param knots: tone-curve knots; 0 leaves the mixer alone
+        :returns: N/A
+        :rtype: N/A
+
+        """
+        super(ColourHead, self).__init__()
+        self.knots = int(knots)
+        self.fc = torch.nn.Linear(in_channels, 12 + 3 * self.knots)
+        # Identity at initialisation, and still trainable: the gradient with
+        # respect to a zero weight is the input times the upstream gradient,
+        # which is not zero.
+        torch.nn.init.zeros_(self.fc.weight)
+        torch.nn.init.zeros_(self.fc.bias)
+        self.register_buffer('eye', torch.eye(3).unsqueeze(0))
+        if self.knots:
+            self.register_buffer(
+                'thresholds',
+                (torch.arange(self.knots, dtype=torch.float32) / self.knots)
+                .view(1, 1, self.knots, 1, 1))
+
+    def forward(self, context, img):
+        """Apply the mixer and curve to an image.
+
+        :param context: (B, C, H, W) features concatenated with the image,
+                        global-average-pooled to drive the prediction
+        :param img: (B, 3, H, W) image to transform
+        :returns: transformed image, (B, 3, H, W)
+        :rtype: Tensor
+
+        """
+        params = self.fc(context.mean(dim=(2, 3)))
+
+        # Mixer: M = I + dM, so a zero prediction is the identity.
+        mixer = params[:, 0:9].view(-1, 3, 3) + self.eye
+        offset = params[:, 9:12].view(-1, 3, 1, 1)
+        out = torch.einsum('bij,bjhw->bihw', mixer, img) + offset
+
+        if self.knots:
+            weights = params[:, 12:].view(-1, 3, self.knots, 1, 1)
+            hinges = torch.clamp(out.unsqueeze(2) - self.thresholds, min=0)
+            out = out + (weights * hinges).sum(dim=2)
+
+        return out
+
+
 class DeepLPFParameterPrediction(nn.Module):
     """Applies the three parametric filters and fuses them into an enhanced image.
 
@@ -1089,6 +1174,13 @@ class DeepLPFParameterPrediction(nn.Module):
         self.cubic_filter = CubicFilter()
         self.graduated_filter = GraduatedFilter()
         self.elliptical_filter = EllipticalFilter()
+        # Constructed after every other module on purpose: see ColourHead.
+        # The flag is bound here rather than read in forward, so an instance
+        # keeps the architecture it was built with even if configure() is
+        # called again afterwards.
+        self.use_colour = fixes.enabled('colour')
+        if self.use_colour:
+            self.colour_head = ColourHead(64, fixes.colour_knots())
       
 
     def forward(self, x):
@@ -1101,6 +1193,13 @@ class DeepLPFParameterPrediction(nn.Module):
         """
         feat = x[:, 3:64, :, :]  # C' = C - 3 backbone features
         img = x[:, 0:3, :, :]    # Y1: backbone-enhanced image
+
+        # `colour` feature: the cross-channel operation no head can express,
+        # applied to Y1 before the cubic filter so every downstream branch -
+        # including the parameter predictors, which read the image - sees the
+        # corrected colour. Identity at initialisation.
+        if self.use_colour:
+            img = self.colour_head(x, img)
 
         # Each branch's parameter predictor consumes cat(feat, image) resized
         # to 300x300. The resize is bilinear and per channel, so
