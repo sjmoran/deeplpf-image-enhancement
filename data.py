@@ -25,11 +25,7 @@ import logging
 from collections import defaultdict
 import torch
 import random
-import matplotlib
-import sys
 from abc import abstractmethod
-matplotlib.use('agg')
-np.set_printoptions(threshold=sys.maxsize)
 
 
 class Dataset(torch.utils.data.Dataset):
@@ -179,16 +175,6 @@ class DataLoader():
         """
         pass
 
-    @abstractmethod
-    def perform_inference(self, net, data_dirpath):
-        """Abstract function for the data loader class
-
-        :returns: N/A
-        :rtype: N/A
-
-        """
-        pass
-
 
 class Adobe5kDataLoader(DataLoader):
     """Data loader for the Adobe5k image-enhancement dataset.
@@ -221,15 +207,12 @@ class Adobe5kDataLoader(DataLoader):
         logging.info("Loading Adobe5k dataset ...")
 
         with open(self.img_ids_filepath) as f:
-            '''
-            Load the image ids into a list data structure
-            '''
-            image_ids = f.readlines()
-            # you may also want to remove whitespace characters like `\n` at the end of each line
-            image_ids_list = [x.rstrip() for x in image_ids]
+            # One image id per line, e.g. "a0001"
+            image_ids_list = [x.rstrip() for x in f.readlines()]
 
+        # Image ids are mapped to dense integer indices in the order they are
+        # first encountered by os.walk; each index holds an input/output pair.
         idx = 0
-        idx_tmp = 0
         img_id_to_idx_dict = {}
 
         for root, dirs, files in os.walk(self.data_dirpath):
@@ -238,39 +221,22 @@ class Adobe5kDataLoader(DataLoader):
 
                 img_id = file.split("-")[0]
 
-                is_id_in_list = False
-                for img_id_test in image_ids_list:
-                    if img_id_test == img_id:
-                        is_id_in_list = True
-                        break
-
-                if is_id_in_list:  # check that the image is a member of the appropriate training/test/validation split
+                if img_id in image_ids_list:  # the image belongs to this train/valid/test split
 
                     if not img_id in img_id_to_idx_dict.keys():
                         img_id_to_idx_dict[img_id] = idx
                         self.data_dict[idx] = {}
                         self.data_dict[idx]['input_img'] = None
                         self.data_dict[idx]['output_img'] = None
-                        idx_tmp = idx
                         idx += 1
-                    else:
-                        idx_tmp = img_id_to_idx_dict[img_id]
+                    pair_idx = img_id_to_idx_dict[img_id]
 
-                    if "input" in root:  # change this to the name of your
-                                        # input data folder
-
-                        input_img_filepath = file
-
-                        self.data_dict[idx_tmp]['input_img'] = root + \
-                            "/" + input_img_filepath
-
-                    elif ("output" in root):  # change this to the name of your
-                                             # output data folder
-
-                        output_img_filepath = file
-
-                        self.data_dict[idx_tmp]['output_img'] = root + \
-                            "/" + output_img_filepath
+                    # Files are paired by their parent directory name: "input"
+                    # for the source image, "output" for the retouched target.
+                    if "input" in root:
+                        self.data_dict[pair_idx]['input_img'] = root + "/" + file
+                    elif ("output" in root):
+                        self.data_dict[pair_idx]['output_img'] = root + "/" + file
 
                 else:
 

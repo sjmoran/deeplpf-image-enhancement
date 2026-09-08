@@ -23,9 +23,7 @@ import sys
 import os
 import torch
 import matplotlib.pyplot as plt
-from torch.autograd import Variable
 from util import ImageProcessing
-from skimage.metrics import structural_similarity as ssim
 import logging
 
 np.set_printoptions(threshold=sys.maxsize)
@@ -68,7 +66,7 @@ class Evaluator():
         
         psnr_avg = 0.0
         ssim_avg = 0.0
-        examples = 0
+        examples = 0  # images seen; evaluation always runs one image at a time
         running_loss = 0
         num_batches = 0
         batch_size = 1
@@ -85,8 +83,7 @@ class Evaluator():
         with torch.no_grad():
             for batch_num, data in enumerate(self.data_loader, 0):
 
-                input_img_batch, output_img_batch, name = Variable(data['input_img'], requires_grad=False).to(device), Variable(data['output_img'],
-                                                                                                   requires_grad=False).to(device), \
+                input_img_batch, output_img_batch, name = data['input_img'].to(device), data['output_img'].to(device), \
                     data['name']
                 input_img_batch = input_img_batch.unsqueeze(0)
 
@@ -103,32 +100,16 @@ class Evaluator():
                     loss = self.criterion(net_output_img_example[:, 0:3, :, :],
                                           output_img_batch[:, 0:3, :, :])
 
-                    input_img_example = (input_img_batch.cpu(
-                    ).data[0, 0:3, :, :].numpy() * 255).astype('uint8')
-
-                    output_img_batch_numpy = output_img_batch.squeeze(
-                        0).data.cpu().numpy()
-                    output_img_batch_numpy = ImageProcessing.swapimdims_3HW_HW3(
-                        output_img_batch_numpy)
-                    output_img_batch_rgb = output_img_batch_numpy
-                    output_img_batch_rgb = ImageProcessing.swapimdims_HW3_3HW(
-                        output_img_batch_rgb)
+                    # Metrics are computed in numpy on 1x3xHxW float arrays in [0, 1]
                     output_img_batch_rgb = np.expand_dims(
-                        output_img_batch_rgb, axis=0)
+                        output_img_batch.squeeze(0).data.cpu().numpy(), axis=0)
 
-                    net_output_img_example_numpy = net_output_img_example.squeeze(
-                        0).data.cpu().numpy()
-                    net_output_img_example_numpy = ImageProcessing.swapimdims_3HW_HW3(
-                        net_output_img_example_numpy)
-                    net_output_img_example_rgb = net_output_img_example_numpy
-                    net_output_img_example_rgb = ImageProcessing.swapimdims_HW3_3HW(
-                        net_output_img_example_rgb)
                     net_output_img_example_rgb = np.expand_dims(
-                        net_output_img_example_rgb, axis=0)
+                        net_output_img_example.squeeze(0).data.cpu().numpy(), axis=0)
                     net_output_img_example_rgb = np.clip(
                         net_output_img_example_rgb, 0, 1)
 
-                    running_loss += loss.data[0]
+                    running_loss += loss.item()
                     examples += batch_size
                     num_batches += 1
 
@@ -139,17 +120,9 @@ class Evaluator():
 
                     psnr_avg += psnr_example
                     ssim_avg += ssim_example
-                    
-                    if batch_num > 30:
-                        '''
-                        We save only the first 30 images down for time saving
-                        purposes
-                        '''
-                        continue
-                    else:
 
-                        output_img_example = (
-                            output_img_batch_rgb[0, 0:3, :, :] * 255).astype('uint8')
+                    # Only the first ~30 enhanced images are written to disk, to save time.
+                    if batch_num <= 30:
                         net_output_img_example = (
                             net_output_img_example_rgb[0, 0:3, :, :] * 255).astype('uint8')
 
@@ -157,13 +130,6 @@ class Evaluator():
                             examples) + "_PSNR_" + str("{0:.3f}".format(psnr_example)) + "_SSIM_" + str(
                             "{0:.3f}".format(ssim_example)) + ".jpg",
                             ImageProcessing.swapimdims_3HW_HW3(net_output_img_example))
-
-                    del net_output_img_example_numpy
-                    del net_output_img_example_rgb
-                    del output_img_batch_rgb
-                    del output_img_batch_numpy
-                    del input_img_example
-                    del output_img_batch
 
         psnr_avg = psnr_avg / num_batches
         ssim_avg = ssim_avg / num_batches

@@ -19,6 +19,26 @@ Authors: Sean Moran (sean.j.moran@gmail.com),
 import torch
 import torch.nn as nn
 
+import fixes
+
+
+def _pad_to_match(x, skip):
+    """Pad an upsampled decoder map so it can be concatenated with its skip connection.
+
+    Odd input sizes lose a row/column at each max-pool, so after nearest
+    upsampling ``x`` can be one pixel shorter than ``skip`` in height and/or
+    width. Pads a single zero column on the left and/or a single zero row at
+    the bottom (only the combinations the original code handled).
+    """
+    if x.shape[3] != skip.shape[3] and x.shape[2] != skip.shape[2]:
+        x = torch.nn.functional.pad(x, (1, 0, 0, 1))
+    elif x.shape[2] != skip.shape[2]:
+        x = torch.nn.functional.pad(x, (0, 0, 0, 1))
+    elif x.shape[3] != skip.shape[3]:
+        x = torch.nn.functional.pad(x, (1, 0, 0, 0))
+    return x
+
+
 class UNet(nn.Module):
     """U-Net backbone used to extract per-pixel features from the input image.
 
@@ -90,62 +110,60 @@ class UNet(nn.Module):
 
         x = self.up_conv1x1_1(self.upsample(x))
         
-        if x.shape[3] != conv4.shape[3] and x.shape[2] != conv4.shape[2]:
-            x = torch.nn.functional.pad(x, (1, 0, 0, 1))
-        elif x.shape[2] != conv4.shape[2]:
-            x = torch.nn.functional.pad(x, (0, 0, 0, 1))
-        elif x.shape[3] != conv4.shape[3]:
-            x = torch.nn.functional.pad(x, (1, 0, 0, 0))
+        x = _pad_to_match(x, conv4)
         
         x = torch.cat([x, conv4], dim=1)
 
         x = self.dconv_up4(x)
         x = self.up_conv1x1_2(self.upsample(x))
 
-        if x.shape[3] != conv3.shape[3] and x.shape[2] != conv3.shape[2]:
-            x = torch.nn.functional.pad(x, (1, 0, 0, 1))
-        elif x.shape[2] != conv3.shape[2]:
-            x = torch.nn.functional.pad(x, (0, 0, 0, 1))
-        elif x.shape[3] != conv3.shape[3]:
-            x = torch.nn.functional.pad(x, (1, 0, 0, 0))
+        x = _pad_to_match(x, conv3)
 
         x = torch.cat([x, conv3], dim=1)
 
         x = self.dconv_up3(x)
         x = self.up_conv1x1_3(self.upsample(x))
 
-        del conv3
-
-        if x.shape[3] != conv2.shape[3] and x.shape[2] != conv2.shape[2]:
-            x = torch.nn.functional.pad(x, (1, 0, 0, 1))
-        elif x.shape[2] != conv2.shape[2]:
-            x = torch.nn.functional.pad(x, (0, 0, 0, 1))
-        elif x.shape[3] != conv2.shape[3]:
-            x = torch.nn.functional.pad(x, (1, 0, 0, 0))
+        x = _pad_to_match(x, conv2)
 
         x = torch.cat([x, conv2], dim=1)
 
         x = self.dconv_up2(x)
         x = self.up_conv1x1_4(self.upsample(x))
 
-        del conv2
-
-        if x.shape[3] != conv1.shape[3] and x.shape[2] != conv1.shape[2]:
-            x = torch.nn.functional.pad(x, (1, 0, 0, 1))
-        elif x.shape[2] != conv1.shape[2]:
-            x = torch.nn.functional.pad(x, (0, 0, 0, 1))
-        elif x.shape[3] != conv1.shape[3]:
-            x = torch.nn.functional.pad(x, (1, 0, 0, 0))
+        x = _pad_to_match(x, conv1)
 
         x = torch.cat([x, conv1], dim=1)
-        del conv1
 
         x = self.dconv_up1(x)
 
         out = self.conv_last(x)
         out = out + x_in_tile
 
-        return out
+
+        # v2: multi-scale features for the filter heads.
+        #
+        # conv1/conv2/conv3 are 1x1 projections of the three finest encoder
+        # scales (16, 32 and 64 channels) onto the 64 channels the heads
+        # consume. They have always been declared in __init__ but were never
+        # called, so in v1 they sat at their initialisation in every released
+        # checkpoint. Wiring them gives the heads access to encoder features
+        # directly, instead of only to the 3-channel image the decoder
+        # collapses to. See docs/RESEARCH_DIRECTIONS.md, observation 1.
+        # Only compute this when it will be used: under --fixes=none the result
+        # is discarded, and three convolutions plus two interpolations per
+        # forward pass is not free.
+        ms_feat = None
+        if fixes.enabled('wiring'):
+            ms_feat = self.conv1(conv1)
+            for proj, skip in ((self.conv2, conv2), (self.conv3, conv3)):
+                ms_feat = ms_feat + torch.nn.functional.interpolate(
+                    proj(skip), size=ms_feat.shape[2:], mode='bilinear',
+                    align_corners=False)
+
+        del conv1, conv2, conv3
+
+        return out, ms_feat
 
 
 class LocalNet(nn.Module):
@@ -207,6 +225,24 @@ class UNetModel(nn.Module):
         self.final_conv = nn.Conv2d(3, 64, 3, 1, 0, 1)
         self.refpad = nn.ReflectionPad2d(1)
 
+        # v2: gate on the multi-scale encoder features, initialised to zero so
+        # an untrained v2 model is numerically identical to v1 and the feature
+        # path has to earn its contribution during training.
+        self.ms_gate = nn.Parameter(torch.zeros(1))
+
+    def _load_from_state_dict(self, state_dict, prefix, *args, **kwargs):
+        """Let v1 checkpoints load cleanly under ``strict=True``.
+
+        ``ms_gate`` is new in v2, so checkpoints released with v1 do not carry
+        it. Supplying the zero initialisation here means such a checkpoint
+        loads into a v2 model and reproduces v1 numerics exactly, rather than
+        failing as a missing key.
+        """
+        key = prefix + 'ms_gate'
+        if key not in state_dict:
+            state_dict[key] = self.ms_gate.detach().clone()
+        return super()._load_from_state_dict(state_dict, prefix, *args, **kwargs)
+
     def forward(self, img):
         """Extract features from the input image.
 
@@ -216,5 +252,14 @@ class UNetModel(nn.Module):
 
         """
 
-        output_img = self.unet(img)
-        return self.final_conv(self.refpad(output_img))
+        output_img, ms_feat = self.unet(img)
+        x = self.final_conv(self.refpad(output_img))
+
+        # Channels 0:3 are the backbone-enhanced image Y1, which the filter
+        # heads and the final skip both depend on, so only the feature channels
+        # 3:64 take the multi-scale contribution.
+        if not fixes.enabled('wiring'):
+            return x
+
+        return torch.cat(
+            [x[:, 0:3], x[:, 3:64] + self.ms_gate * ms_feat[:, 3:64]], dim=1)

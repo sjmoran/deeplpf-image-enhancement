@@ -18,7 +18,6 @@ Authors: Sean Moran (sean.j.moran@gmail.com),
 '''
 import matplotlib
 matplotlib.use('agg')
-from torch.autograd import Variable
 import inspect
 import numpy as np
 import torch
@@ -36,6 +35,42 @@ if "channel_axis" in inspect.signature(ssim).parameters:
     _SSIM_MULTICHANNEL_KWARGS = {"channel_axis": -1}
 else:  # older skimage (e.g. the pinned 0.18.1)
     _SSIM_MULTICHANNEL_KWARGS = {"multichannel": True}
+
+
+_LAB_CONSTANTS = {}
+
+
+def _lab_constants(device):
+    """The constant matrices/vectors of :meth:`ImageProcessing.rgb_to_lab`,
+    built once per device rather than copied host-to-device on every call."""
+    consts = _LAB_CONSTANTS.get(device)
+    if consts is None:
+        # Linear RGB -> XYZ (D65), then normalise by the D65 white point
+        rgb_to_xyz = torch.FloatTensor([  # X        Y          Z
+                                                [0.412453, 0.212671,
+                                                    0.019334],  # R
+                                                [0.357580, 0.715160,
+                                                    0.119193],  # G
+                                                [0.180423, 0.072169,
+                                                    0.950227],  # B
+                                                ]).to(device)
+        white = torch.FloatTensor([1/0.950456, 1.0, 1/1.088754]).to(device)
+        # (fx, fy, fz) -> (L, a, b): L = 116 fy - 16, a = 500 (fx - fy), b = 200 (fy - fz)
+        fxfyfz_to_lab = torch.FloatTensor([[0.0,  500.0,    0.0],  # fx
+                                                    [116.0, -500.0,  200.0],  # fy
+                                                    [0.0,    0.0, -200.0],  # fz
+                                                    ]).to(device)
+        lab_offset = torch.FloatTensor([-16.0, 0.0, 0.0]).to(device)
+        # Per-channel rescaling to [0, 1]: L / 100, (a / 110 + 1) / 2, (b / 110 + 1) / 2.
+        # Written as x / d + o with d = (100, 220, 220), o = (0, 0.5, 0.5):
+        # (x / 110 + 1) / 2 and x / 220 + 0.5 round identically in IEEE
+        # arithmetic since halving is exact, so this is the same map in one
+        # kernel instead of three in-place slice writes.
+        rescale_div = torch.FloatTensor([100.0, 220.0, 220.0]).view(3, 1, 1).to(device)
+        rescale_off = torch.FloatTensor([0.0, 0.5, 0.5]).view(3, 1, 1).to(device)
+        consts = _LAB_CONSTANTS[device] = (
+            rgb_to_xyz, white, fxfyfz_to_lab, lab_offset, rescale_div, rescale_off)
+    return consts
 
 
 class ImageProcessing(object):
@@ -57,53 +92,46 @@ class ImageProcessing(object):
         :rtype: Tensor
 
         """
+        # CHW -> WHC -> (W*H, 3) so each pixel is a row for the matrix products below
         img = img.permute(2, 1, 0)
         shape = img.shape
         img = img.contiguous()
         img = img.view(-1, 3)
 
+        # sRGB gamma expansion to linear RGB (piecewise: linear below 0.04045)
         img = (img / 12.92) * img.le(0.04045).float() + (((torch.clamp(img,
                                                                        min=0.000001) + 0.055) / 1.055) ** 2.4) * img.gt(0.04045).float()
 
-        rgb_to_xyz = Variable(torch.FloatTensor([  # X        Y          Z
-                                                [0.412453, 0.212671,
-                                                    0.019334],  # R
-                                                [0.357580, 0.715160,
-                                                    0.119193],  # G
-                                                [0.180423, 0.072169,
-                                                    0.950227],  # B
-                                                ]), requires_grad=False).to(img.device)
+        (rgb_to_xyz, white, fxfyfz_to_lab, lab_offset,
+         rescale_div, rescale_off) = _lab_constants(img.device)
 
+        # Linear RGB -> XYZ (D65), then normalise by the D65 white point
         img = torch.matmul(img, rgb_to_xyz)
-        img = torch.mul(img, Variable(torch.FloatTensor(
-            [1/0.950456, 1.0, 1/1.088754]), requires_grad=False).to(img.device))
+        img = torch.mul(img, white)
 
+        # CIE f(t): cube root above (6/29)^3, linear below (the clamps keep the
+        # gradient of the cube root finite at zero)
         epsilon = 6/29
 
         img = ((img / (3.0 * epsilon**2) + 4.0/29.0) * img.le(epsilon**3).float()) + \
             (torch.clamp(img, min=0.0001)**(1.0/3.0) * img.gt(epsilon**3).float())
 
-        fxfyfz_to_lab = Variable(torch.FloatTensor([[0.0,  500.0,    0.0],  # fx
-                                                    [116.0, -500.0,  200.0],  # fy
-                                                    [0.0,    0.0, -200.0],  # fz
-                                                    ]), requires_grad=False).to(img.device)
-
-        img = torch.matmul(img, fxfyfz_to_lab) + Variable(
-            torch.FloatTensor([-16.0, 0.0, 0.0]), requires_grad=False).to(img.device)
+        # (fx, fy, fz) -> (L, a, b): L = 116 fy - 16, a = 500 (fx - fy), b = 200 (fy - fz)
+        img = torch.matmul(img, fxfyfz_to_lab) + lab_offset
 
         img = img.view(shape)
         img = img.permute(2, 1, 0)
 
         '''
         L_chan: black and white with input range [0, 100]
-        a_chan/b_chan: color channels with input range ~[-110, 110], not exact 
+        a_chan/b_chan: color channels with input range ~[-110, 110], not exact
         [0, 100] => [0, 1],  ~[-110, 110] => [0, 1]
         '''
-        img[0, :, :] = img[0, :, :]/100
-        img[1, :, :] = (img[1, :, :]/110 + 1)/2
-        img[2, :, :] = (img[2, :, :]/110 + 1)/2
+        img = img / rescale_div + rescale_off
 
-        img[(img != img).detach()] = 0
+        # Zero any NaNs. A boolean-mask assignment here would run nonzero() and
+        # so synchronise the GPU with the host on every call; where() does not.
+        img = torch.where(img != img, torch.zeros((), dtype=img.dtype, device=img.device), img)
 
         img = img.contiguous()
 
