@@ -22,6 +22,9 @@ Official PyTorch implementation of the CVPR 2020 paper **DeepLPF: Deep Local Par
 - [How it works](#how-it-works)
 - [Pre-trained models](#pre-trained-models)
 - [Training](#training)
+- [Reproducing the Adobe-DPE results](#reproducing-the-adobe-dpe-results)
+- [Auditing your own model](#auditing-your-own-model)
+- [Which number, which protocol](#which-number-which-protocol)
 - [Datasets](#datasets)
 - [Original (CVPR 2020) code](#original-cvpr-2020-code)
 - [Citation](#citation)
@@ -128,7 +131,7 @@ Because the network predicts a small set of human-meaningful filter parameters r
 
 Checkpoints are in `pretrained_models/`:
 
-- **Adobe-DPE** (`pretrained_models/adobe_dpe/`): trained on Adobe5K using the splits and pre-processing from the DeepPhotoEnhancer paper. The best-validation checkpoint (epoch 424) reaches 23.90 dB PSNR / 0.911 SSIM on the Adobe-DPE test set and is the one used in the [Quick start](#quick-start).
+- **Adobe-DPE** (`pretrained_models/adobe_dpe/`): trained on Adobe5K with the DeepPhotoEnhancer pre-processing. The best-validation checkpoint (epoch 424) reaches 23.90 dB PSNR / 0.911 SSIM, measured on the best-guess split this repository shipped before the original DPE lists were recovered — see [`adobe5k_dpe/SPLIT_PROVENANCE.md`](./adobe5k_dpe/SPLIT_PROVENANCE.md). It is the checkpoint used in the [Quick start](#quick-start).
 - **Adobe-UPE** (`pretrained_models/adobe_upe/`): trained on Adobe5K using the splits and pre-processing from the DeepUPE paper. Contributed by Yucheng Lu (yucheng.l@outlook.com) and applied in [this paper](https://arxiv.org/abs/2106.14844).
 
 ## Training
@@ -150,11 +153,137 @@ Training supports a batch size greater than one via `--batch_size` for throughpu
 <img src="./images/deeplpf_training_loss.png" width="70%"/>
 </p>
 
+## Reproducing the Adobe-DPE results
+
+End to end, from a clean clone to a trained model. Every step is checkable, so
+you find out at the step that went wrong rather than at the end.
+
+**1. Environment.** Python 3.11 or newer.
+
+```bash
+pip install -r requirements.txt
+```
+
+**2. Get the raw data.** Download the MIT-Adobe FiveK archive (about 47 GB of
+DNGs plus the Lightroom catalogue) from
+[the dataset page](https://data.csail.mit.edu/graphics/fivek/).
+
+**3. Render the pairs in Lightroom.** This step needs Lightroom Classic and
+cannot be scripted from outside it; the DNGs have to be developed through
+Adobe's renderer to match the published data. Open
+`fivek_dataset/raw_photos/fivek.lrcat` and export two collections, both as
+**PNG / sRGB / 8-bit / long edge 512 px / don't enlarge / original filenames**:
+
+| Collection | Destination | Role |
+|---|---|---|
+| `InputAsShotZeroed` | `~/fivek/input` | network input |
+| `Experts / C` | `~/fivek/output` | target |
+
+The input collection matters. `InputAsShotZeroed` is the one that reproduces
+this repo's bundled reference inputs exactly; the `... minus 1.5` renderings
+apply a −1.5 EV exposure cut and give inputs roughly 1.6× too dark. Full
+walkthrough, including a Lightroom plug-in that does both exports:
+[docs/ADOBE_DPE_DATASET.md](./docs/ADOBE_DPE_DATASET.md).
+
+**4. Organise and verify.**
+
+```bash
+python3 data_prep/organise_fivek.py ~/fivek/input ~/fivek/output \
+    ./adobe5k_dpe_data --long-edge 512 --no-resize
+python3 data_prep/verify_dataset.py ./adobe5k_dpe_data
+```
+
+First check the export itself against the reference manifest:
+
+```bash
+python3 data_prep/verify_export.py ./adobe5k_dpe_data adobe5k_dpe/MANIFEST.json.gz
+```
+
+The FiveK photographs are their photographers' copyright and cannot be
+redistributed, so this repository ships checksums and per-image statistics
+instead — enough to tell you whether your own export matches ours, and what is
+wrong when it does not. A correct export reports every image byte-identical. A
+wrong one is diagnosed rather than merely rejected, for example:
+
+```
+40 differ in pixel values:
+  a0001-jmac_DSC1459.png     mean delta R -37.01 G -36.97 B -35.32
+-> your images are 32.3 levels darker than the reference: this is the
+   signature of a `... minus 1.5` Inputs rendering, which applies a -1.5 EV
+   exposure cut. Re-export from `InputAsShotZeroed`.
+```
+
+`verify_dataset.py` is then the checkpoint for the whole stage. Expect 5000 pairs
+split 2250 train / 2250 valid / 498 test, fully paired, and `mean|Δ|` under 15
+against the bundled reference inputs. A large `mean|Δ|` means the wrong `Inputs`
+rendering was exported — re-export the inputs and run it again.
+
+**5. Train.**
+
+```bash
+python3 main.py \
+  --training_img_dirpath=./adobe5k_dpe_data/ \
+  --train_img_list_path=./adobe5k_dpe/images_train.txt \
+  --valid_img_list_path=./adobe5k_dpe/images_valid.txt \
+  --test_img_list_path=./adobe5k_dpe/images_test.txt \
+  --batch_size=1
+```
+
+Checkpoints are written whenever validation PSNR improves, into a timestamped
+`log_*` directory, with the metrics in the filename.
+
+**What to expect.** The released Adobe-DPE checkpoint is epoch 424 and scores
+**23.90 dB PSNR / 0.911 SSIM** — but that figure was measured on the best-guess
+split this repository shipped until September 2026, *not* on the DPE test set.
+[`adobe5k_dpe/`](./adobe5k_dpe/) now holds the recovered original DPE lists, and
+the two test sets have only 45 of ~500 images in common, so a run against the
+current lists is not directly comparable with 23.90 dB. Treat it as a rough
+target only; a like-for-like number on the recovered split has yet to be
+published here. See [`adobe5k_dpe/SPLIT_PROVENANCE.md`](./adobe5k_dpe/SPLIT_PROVENANCE.md).
+The fastest way to confirm your pipeline before committing to a full training
+run is the [Quick start](#quick-start) inference command — it runs the released
+checkpoint over the bundled examples and prints per-image PSNR/SSIM.
+
+## Auditing your own model
+
+`modelaudit/` is a standalone checker for the class of defect that does not
+raise an exception: a parameter that receives no gradient, a module built and
+never called, a component inert in a released checkpoint, a loss term weighted
+into irrelevance. One forward pass, one backward per loss term, CPU only, torch
+the only dependency — point it at any PyTorch model.
+
+```python
+from modelaudit import audit
+report = audit(build=lambda: MyNet(),
+               forward=lambda m: m(torch.randn(1, 3, 64, 64)),
+               ckpt="pretrained/model.pt")
+report.print()
+```
+
+Every check exists because DeepLPF had that defect. See
+[modelaudit/README.md](./modelaudit/README.md) for what each one finds, the
+false positives that had to be engineered out before it was usable on other
+people's code, measured base rates so a hit can be read in proportion, and an
+explicit list of what it cannot see.
+
+## Which number, which protocol
+
+DeepLPF appears in the literature as **23.63**, **23.90**, **23.93**, **24.48**
+and **24.73** dB. All five are correct; they are five different protocols, and
+they are not comparable with one another. The same is true of every method on
+FiveK, and it is the most common way comparisons go wrong.
+
+**[docs/BENCHMARK_TABLE.md](./docs/BENCHMARK_TABLE.md)** states which number
+belongs to which protocol, what each protocol is, which split files reproduce
+it, and — where we cannot reproduce one — says so rather than implying
+otherwise. It also records the ICCV 2021 errata whose corrected DeepLPF figures
+never reached the CVF copy of that paper.
+
 ## Datasets
 
 DeepLPF is trained on the [MIT-Adobe FiveK](https://data.csail.mit.edu/graphics/fivek/) photographs, processed through Lightroom with Expert C retouching as the target. For a step-by-step walkthrough (Lightroom export settings, the expected folder layout, and helper/verification scripts), see **[docs/ADOBE_DPE_DATASET.md](./docs/ADOBE_DPE_DATASET.md)**.
 
-- **Adobe-DPE** (5000 RGB→RGB pairs): download [here](https://data.csail.mit.edu/graphics/fivek/), then pre-process per the DeepPhotoEnhancer (DPE) [paper](https://github.com/nothinglo/Deep-Photo-Enhancer) (Expert C as target, exported in sRGB); see the [DPE instructions](https://github.com/nothinglo/Deep-Photo-Enhancer/issues/38#issuecomment-449786636). The train/valid/test splits are in [`adobe5k_dpe/`](./adobe5k_dpe/) (note: a best guess at the original DPE splits, which were unavailable).
+- **Adobe-DPE** (5000 RGB→RGB pairs): download [here](https://data.csail.mit.edu/graphics/fivek/), then pre-process per the DeepPhotoEnhancer (DPE) [paper](https://github.com/nothinglo/Deep-Photo-Enhancer) (the `InputAsShotZeroed` Lightroom rendering as input, Expert C as target, both exported in sRGB); see the [DPE instructions](https://github.com/nothinglo/Deep-Photo-Enhancer/issues/38#issuecomment-449786636) and [Reproducing the Adobe-DPE results](#reproducing-the-adobe-dpe-results). The train/valid/test splits in [`adobe5k_dpe/`](./adobe5k_dpe/) are the **original DPE splits** (2250 / 2250 / **498**), recovered in September 2026 from a third-party mirror of the DPE release after every official link went dead — see [`adobe5k_dpe/SPLIT_PROVENANCE.md`](./adobe5k_dpe/SPLIT_PROVENANCE.md). They replace the best-guess reconstruction this repository shipped until then, which shared only 45 of its 500 test images with the real DPE test set.
 - **Adobe-UPE** (5000 RGB→RGB pairs): download [here](https://data.csail.mit.edu/graphics/fivek/), then pre-process per the DeepUPE [paper](https://github.com/wangruixing/DeepUPE) as detailed [here](https://github.com/wangruixing/DeepUPE/issues/26). Test images are [available here](https://drive.google.com/file/d/1HZnNgptNxjKJAhekz2K5yh0mW0yKIws2/view?usp=sharing).
 
 ## Original (CVPR 2020) code
