@@ -57,12 +57,19 @@ class Evaluator():
     def evaluate(self, net, epoch=0):
         """Evaluates a network on a specified split of a dataset e.g. test, validation
 
+        Per-image PSNR and SSIM are written to ``<split>_per_image.csv`` in the
+        log directory, one row per image per evaluation. The mean alone cannot
+        support an error bar: comparing two arms needs the *paired* per-image
+        differences, since all arms see the same images and image difficulty is
+        the dominant source of variance. See ``tools/paired_bootstrap.py``.
+
         :param net: PyTorch neural network data structure
         :param epoch: current epoch
         :returns: average loss, average PSNR, average SSIM
         :rtype: float, float, float
 
         """
+        per_image = []
         
         psnr_avg = 0.0
         ssim_avg = 0.0
@@ -120,6 +127,7 @@ class Evaluator():
 
                     psnr_avg += psnr_example
                     ssim_avg += ssim_example
+                    per_image.append((name[0], psnr_example, ssim_example))
 
                     # Only the first ~30 enhanced images are written to disk, to save time.
                     if batch_num <= 30:
@@ -136,6 +144,18 @@ class Evaluator():
 
         logging.info('loss_%s: %.5f psnr_%s: %.3f ssim_%s: %.3f' % (
             self.split_name, (running_loss / examples), self.split_name, psnr_avg, self.split_name, ssim_avg))
+
+        # One row per image, appended across evaluations. Written after the
+        # means are logged so a crash mid-eval cannot leave a partial epoch
+        # looking complete.
+        csv_path = os.path.join(self.log_dirpath,
+                                '%s_per_image.csv' % self.split_name.lower())
+        new_file = not os.path.isfile(csv_path)
+        with open(csv_path, 'a') as handle:
+            if new_file:
+                handle.write('epoch,image,psnr,ssim\n')
+            for image_name, psnr, ssim in per_image:
+                handle.write('%d,%s,%.6f,%.6f\n' % (epoch + 1, image_name, psnr, ssim))
 
         loss = (running_loss / examples)
 

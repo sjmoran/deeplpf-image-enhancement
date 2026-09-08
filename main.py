@@ -117,6 +117,14 @@ def main():
              "to the identity. Defaults to 3e-3.")
 
     parser.add_argument(
+        "--checkpoint_every", type=int, required=False, default=None,
+        help="Also save a checkpoint every N validation rounds regardless of "
+             "whether validation improved. Saving only on improvement leaves "
+             "late training almost unsampled - runs here produced 125-epoch "
+             "gaps - so there is nothing to average over and no way to "
+             "estimate run-to-run variability. Costs disk, nothing else.")
+
+    parser.add_argument(
         "--colour_knots", type=int, required=False, default=None,
         help="Knots in the per-channel tone curve of the `colour` feature. "
              "0 leaves the global colour mixer alone, which is the ablation "
@@ -395,6 +403,17 @@ def main():
 
                     best_valid_psnr = valid_psnr
                     torch.save(net.state_dict(), os.path.join(log_dirpath, snapshot_name))
+
+                # Unconditional schedule, independent of the selection rule
+                # above. The best-validation checkpoint is an argmax over
+                # near-tied values, so it carries selection noise of the same
+                # order as the effects being compared; a fixed schedule gives
+                # a population to average over and to quote a spread from.
+                if args.checkpoint_every and \
+                        (epoch + 1) % (valid_every * args.checkpoint_every) == 0:
+                    sched_name = 'sched_validpsnr_{}_testpsnr_{}_epoch_{}_model.pt'.format(
+                        valid_psnr, test_psnr, epoch)
+                    torch.save(net.state_dict(), os.path.join(log_dirpath, sched_name))
 
                 net.train()
 
