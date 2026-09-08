@@ -99,3 +99,53 @@ def test_reports_loss_term_shares():
     _, msssim_share = report.loss_shares['msssim']
     assert msssim_share < 0.05, \
         'MS-SSIM share is %.3f%%; the docs claim it is decorative' % (100 * msssim_share)
+
+
+def test_checkpoint_prefix_is_resolved_by_trying_both_ways():
+    """A "module." prefix is ambiguous, so the loader must try it both ways.
+
+    A DataParallel checkpoint is prefixed "module."; so is every key of a model
+    whose own top-level submodule is called `module`. Stripping unconditionally
+    mangles the second case, leaves the affected layers at their initialisation,
+    and makes the INERT check report phantom hits on a model that is fine.
+    """
+    import torch.nn as nn
+    from modelaudit import audit as run_audit
+
+    class Inner(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.lin = nn.Linear(8, 8)
+
+        def forward(self, x):
+            return self.lin(x)
+
+    class NamedModule(nn.Module):
+        """Top-level submodule legitimately called `module`."""
+
+        def __init__(self):
+            super().__init__()
+            self.module = Inner()
+
+        def forward(self, x):
+            return self.module(x)
+
+    class Plain(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.lin = nn.Linear(8, 8)
+
+        def forward(self, x):
+            return self.lin(x)
+
+    forward = lambda m: m(torch.randn(2, 8))
+
+    report = run_audit(NamedModule, forward, ckpt=NamedModule().state_dict())
+    assert not [e for e in report.errors if e[0] == 'ckpt'], \
+        'a submodule named `module` was mistaken for a DataParallel prefix: %s' % report.errors
+
+    plain_state = Plain().state_dict()
+    wrapped = {'module.' + k: v for k, v in plain_state.items()}
+    report = run_audit(Plain, forward, ckpt=wrapped)
+    assert not [e for e in report.errors if e[0] == 'ckpt'], \
+        'a real DataParallel prefix was not stripped: %s' % report.errors

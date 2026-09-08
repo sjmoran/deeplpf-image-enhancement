@@ -239,10 +239,35 @@ def audit(build, forward, ckpt=None, loss_terms=None, weights=None, train_mode=T
         for k in ("state_dict", "model", "net", "params"):
             if isinstance(sd, dict) and k in sd and isinstance(sd[k], dict):
                 sd = sd[k]
-        sd = {k.replace("module.", "", 1): v for k, v in sd.items()}
-        missing, unexpected = model.load_state_dict(sd, strict=False)
+        # A DataParallel checkpoint is prefixed "module."; so is every key of a
+        # model whose own top-level submodule happens to be called `module`,
+        # which is not rare. Stripping unconditionally mangles the second case,
+        # leaves every affected layer at its initialisation, and makes the INERT
+        # check report a pile of phantom hits. There is no way to tell the two
+        # apart from the keys alone, so try it both ways and keep whichever
+        # actually loads.
+        def _try(candidate):
+            missing, unexpected = model.load_state_dict(candidate, strict=False)
+            return len(missing) + len(unexpected), missing, unexpected
+
+        score, missing, unexpected = _try(sd)
+        if score and all(k.startswith("module.") for k in sd):
+            stripped = {k[len("module."):]: v for k, v in sd.items()}
+            alt_score, alt_missing, alt_unexpected = _try(stripped)
+            if alt_score < score:
+                sd, score, missing, unexpected = (
+                    stripped, alt_score, alt_missing, alt_unexpected)
+            else:
+                # restore the better of the two before continuing
+                _try(sd)
         if missing:
             rep.errors.append(("ckpt", f"{len(missing)} missing keys, e.g. {missing[:3]}"))
+        if unexpected:
+            rep.errors.append(("ckpt", f"{len(unexpected)} unexpected keys, e.g. {unexpected[:3]}"))
+        if missing or unexpected:
+            rep.errors.append(("ckpt", "checkpoint did not load cleanly: INERT results "
+                                       "below are UNRELIABLE, since an unloaded layer is "
+                                       "trivially at its initialisation"))
 
     params = [(n, p) for n, p in model.named_parameters() if p.requires_grad]
     rep.n_params = len(params)
