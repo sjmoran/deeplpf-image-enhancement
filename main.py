@@ -25,24 +25,21 @@ reported and saved individually. To reproduce the paper's reported results,
 train with a batch size of 1.
 '''
 import model
+import fixes
+import random
+import numpy as np
 import metric
 import os
-import os.path
 import datetime
 import torch.optim as optim
 import argparse
 import logging
-from torch.autograd import Variable
 import torchvision.transforms as transforms
 import torch
-import time
+import torch._dynamo
+import trainstep
 from data import Adobe5kDataLoader, Dataset
 from torch.utils.tensorboard import SummaryWriter
-import matplotlib
-import numpy as np
-import sys
-np.set_printoptions(threshold=sys.maxsize)
-matplotlib.use('agg')
 
 def main():
     """Entry point for training and inference.
@@ -104,7 +101,64 @@ def main():
         "--test_img_list_path", required=False,
         help="Plain text file containing the names of the test images")
 
+    parser.add_argument(
+        "--msssim_weight", type=float, required=False, default=None,
+        help="Weight on the MS-SSIM term of Eq. 8. Defaults to the published "
+             "1e-3, at which the term contributes ~0.07%% of the L1 gradient "
+             "and cannot affect training. Raise it to test whether the "
+             "structural term matters when it is not decorative.")
+    parser.add_argument(
+        "--seed", type=int, required=False, default=None,
+        help="Seed for torch, numpy and Python RNGs. Without it every run "
+             "starts from a different initialisation and shuffle order, so "
+             "arms of an ablation differ by luck as well as by the change "
+             "under test. Set it for any comparison between runs.")
+    parser.add_argument(
+        "--tf32", action="store_true",
+        help="Allow TF32 matmul/conv on Ampere+ GPUs. Faster, with a small "
+             "loss of mantissa precision. Off by default so the replication "
+             "path keeps full fp32.")
+    parser.add_argument(
+        "--compile", action="store_true", dest="use_compile",
+        help="Wrap the network in torch.compile. Fuses kernels, which is "
+             "where this model's time actually goes at batch size 1. Costs a "
+             "one-off compilation at startup.")
+    parser.add_argument(
+        "--cuda_graphs", action="store_true",
+        help="Capture the whole training step (forward, loss, backward, Adam) "
+             "in one CUDA graph per image shape and replay it. Removes the "
+             "per-kernel launch cost the model is bound by at batch size 1. "
+             "Same kernels and arithmetic as eager; Adam runs capturable, "
+             "which computes its bias corrections in fp32 on the device. "
+             "Requires CUDA. See trainstep.py.")
+    parser.add_argument(
+        "--amp", choices=("bf16",), default=None,
+        help="Run the network's forward pass under bf16 autocast; the loss "
+             "stays fp32. Changes the numerics: against fp32 on an untrained "
+             "model, max abs prediction difference 0.012, loss 6e-5, "
+             "parameter gradients 0.6-1.3%% of their norm. Off by default.")
+    parser.add_argument(
+        "--fixes", required=False, default="none",
+        help="Which v2 fixes to enable: 'none' (the published v1 model), "
+             "'all', or a comma-separated subset of "
+             "wiring,ellipse,ste,msssim. Default 'none'.")
+
     args = parser.parse_args()
+    active_fixes = fixes.configure(args.fixes, args.msssim_weight)
+
+    if args.seed is not None:
+        # Seed every source the training loop draws on: weight init, the
+        # DataLoader's shuffle, and the augmentation flips in data.py.
+        random.seed(args.seed)
+        np.random.seed(args.seed)
+        torch.manual_seed(args.seed)
+        torch.cuda.manual_seed_all(args.seed)
+
+    if args.tf32:
+        # Ampere and later: run matmuls and convolutions in TF32.
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+        torch.set_float32_matmul_precision('high')
     num_epoch = args.num_epoch
     batch_size = args.batch_size
     crop_size = args.crop_size
@@ -119,6 +173,11 @@ def main():
 
     logging.info('######### Parameters #########')
     logging.info('Number of epochs: ' + str(num_epoch))
+    logging.info('Seed: ' + (str(args.seed) if args.seed is not None else 'unseeded (runs are not comparable)'))
+    logging.info('TF32: ' + str(args.tf32) + ', torch.compile: ' + str(args.use_compile)
+                 + ', CUDA graphs: ' + str(args.cuda_graphs) + ', amp: ' + str(args.amp))
+    logging.info('MS-SSIM weight: ' + str(fixes.msssim_weight()))
+    logging.info('v2 fixes enabled: ' + (', '.join(active_fixes) or 'none (v1 model)'))
     logging.info('Logging directory: ' + str(log_dirpath))
     logging.info('Dump validation accuracy every: ' + str(valid_every))
     logging.info('Training image directory: ' + str(training_img_dirpath))
@@ -206,8 +265,12 @@ def main():
         testing_data_dict = testing_data_loader.load_data()
         testing_dataset = Dataset(data_dict=testing_data_dict, normaliser=1,is_valid=True)
 
+        # num_workers is part of the seeded recipe: the per-worker RNG that
+        # draws the augmentation flips is seeded from (base_seed + worker_id),
+        # so changing the worker count changes which image gets which flip.
+        # pin_memory only changes where the host copy lives.
         training_data_loader = torch.utils.data.DataLoader(training_dataset, batch_size=BATCH_SIZE, shuffle=True,
-                                                       num_workers=6)
+                                                       num_workers=6, pin_memory=True)
         # Evaluation runs at batch size 1 so per-image metrics are reported/saved.
         testing_data_loader = torch.utils.data.DataLoader(testing_dataset, batch_size=1, shuffle=False,
                                                       num_workers=6)
@@ -220,10 +283,7 @@ def main():
         logging.info('######### Network created #########')
         logging.info('Architecture:\n' + str(net))
 
-        for name, param in net.named_parameters():
-            if param.requires_grad:
-                print(name)
-
+        # Paper Eq. 8 / Sec. 4.1: L1 in CIELab + 1e-3 * (1 - MS-SSIM) on the L channel.
         criterion = model.DeepLPFLoss(ssim_window_size=5)
 
         '''
@@ -234,89 +294,64 @@ def main():
         testing_evaluator = metric.Evaluator(
             criterion, testing_data_loader, "test", log_dirpath)
 
+        # Adam with lr 1e-4, as in the paper's implementation details (Sec. 4.1).
+        if args.use_compile:
+            # Compile after the weights are on the device, and keep the
+            # optimiser bound to the original module's parameters.
+            # FiveK has 16 distinct image sizes, which dynamo turns into 9
+            # graphs (measured with backend='eager'; no graph breaks). The
+            # default cache_size_limit is 8, so the ninth shape silently fell
+            # back to eager for the rest of the run. Raise it so every shape
+            # gets compiled; expect the first epoch to spend minutes compiling.
+            # NB: no `import torch._dynamo` here. A function-local import of a
+            # torch submodule rebinds `torch` as a local for the WHOLE function,
+            # so every earlier `torch.` reference in main() raises
+            # UnboundLocalError. It is imported at module scope instead.
+            torch._dynamo.config.cache_size_limit = 64
+            logging.info('Compiling the network with torch.compile (cache_size_limit=64)')
+            net = torch.compile(net)
+
+        if args.cuda_graphs and device.type != 'cuda':
+            raise SystemExit('--cuda_graphs needs a CUDA device')
+        # capturable=True keeps Adam's step count on the device so the update
+        # can be captured; it is the only optimiser change graphs need.
         optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr=1e-4, betas=(0.9, 0.999),
-                               eps=1e-08)
+                               eps=1e-08, capturable=args.cuda_graphs)
+        amp_dtype = torch.bfloat16 if args.amp == 'bf16' else None
+        step_cls = trainstep.GraphedStep if args.cuda_graphs else trainstep.EagerStep
+        train_step = step_cls(net, criterion, optimizer, autocast_dtype=amp_dtype)
         best_valid_psnr = 0.0
 
         optimizer.zero_grad()
         net.train()
 
-        running_loss = 0.0
-        examples = 0
-        total_examples = 0
+        total_examples = 0  # running count over all epochs; x-axis of the per-batch loss curve
 
         for epoch in range(num_epoch):
 
             # Train loss
             examples = 0.0
             running_loss = 0.0
-            
+
             for batch_num, data in enumerate(training_data_loader, 0):
 
-                input_img_batch, gt_img_batch, _ = Variable(data['input_img'],
-                                                                       requires_grad=False).to(device), Variable(data['output_img'],
-                                                                                                             requires_grad=False).to(device), data[
-                    'name']
+                input_img_batch = data['input_img'].to(device, non_blocking=True)
+                gt_img_batch = data['output_img'].to(device, non_blocking=True)
 
-                start_time = time.time()
-                net_img_batch = net(input_img_batch)
-                net_img_batch = torch.clamp(net_img_batch, 0.0, 1.0)
+                # Forward, loss, backward, Adam: eager, or one graph replay.
+                loss = train_step(input_img_batch, gt_img_batch)
 
-                elapsed_time = time.time() - start_time
-
-                loss = criterion(net_img_batch, gt_img_batch)
-
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-
-                running_loss += loss.data[0]
+                # One device-to-host sync per step, not two.
+                loss_value = loss.item()
+                running_loss += loss_value
                 examples += BATCH_SIZE
                 total_examples+=BATCH_SIZE
 
-                writer.add_scalar('Loss/train', loss.data[0], total_examples)
+                writer.add_scalar('Loss/train', loss_value, total_examples)
 
             logging.info('[%d] train loss: %.15f' %
                          (epoch + 1, running_loss / examples))
             writer.add_scalar('Loss/train_smooth', running_loss / examples, epoch + 1)
-
-            # Valid loss
-            '''
-            examples = 0.0
-            running_loss = 0.0
-
-            for batch_num, data in enumerate(validation_data_loader, 0):
-
-                net.eval()
-
-                input_img_batch, output_img_batch, category = Variable(
-                    data['input_img'],
-                    requires_grad=False).to(device), Variable(data['output_img'],
-                                                         requires_grad=False).to(device), \
-                    data[
-                    'name']
-
-                net_output_img_batch = net(
-                    input_img_batch)
-                net_output_img_batch = torch.clamp(
-                    net_output_img_batch, 0.0, 1.0)
-
-                optimizer.zero_grad()
-
-                loss = criterion(net_output_img_batch, output_img_batch)
-
-                running_loss += loss.data[0]
-                examples += BATCH_SIZE
-                total_examples+=BATCH_SIZE
-
-                writer.add_scalar('Loss/train', loss.data[0], total_examples)
-
-            logging.info('[%d] valid loss: %.15f' %
-                         (epoch + 1, running_loss / examples))
-            writer.add_scalar('Loss/valid_smooth', running_loss / examples, epoch + 1)
-
-            net.train()
-            '''
 
             if (epoch + 1) % valid_every == 0:
 
@@ -327,25 +362,19 @@ def main():
                 test_loss, test_psnr, test_ssim = testing_evaluator.evaluate(
                     net, epoch)
 
-                # update best validation set psnr
+                # Checkpoint whenever validation PSNR improves (model selection is on the validation split).
                 if valid_psnr > best_valid_psnr:
 
+                    # Evaluator.evaluate returns plain floats, so use them
+                    # directly. This read valid_loss.tolist()[0], which worked
+                    # only while running_loss accumulated 1-element tensors.
+                    snapshot_name = 'deeplpf_validpsnr_{}_validloss_{}_testpsnr_{}_testloss_{}_epoch_{}_model.pt'.format(
+                        valid_psnr, valid_loss, test_psnr, test_loss, epoch)
                     logging.info(
-                        "Validation PSNR has increased. Saving the more accurate model to file: " + 'deeplpf_validpsnr_{}_validloss_{}_testpsnr_{}_testloss_{}_epoch_{}_model.pt'.format(valid_psnr,
-                                                                                                                                                                                         valid_loss.tolist()[0], test_psnr, test_loss.tolist()[
-                                                                                                                                                                                             0],
-                                                                                                                                                                                         epoch))
+                        "Validation PSNR has increased. Saving the more accurate model to file: " + snapshot_name)
 
                     best_valid_psnr = valid_psnr
-                    snapshot_prefix = os.path.join(
-                        log_dirpath, 'deeplpf')
-                    snapshot_path = snapshot_prefix + '_validpsnr_{}_validloss_{}_testpsnr_{}_testloss_{}_epoch_{}_model.pt'.format(valid_psnr,
-                                                                                                                                    valid_loss.tolist()[
-                                                                                                                                        0],
-                                                                                                                                    test_psnr, test_loss.tolist()[
-                                                                                                                                        0],
-                                                                                                                                    epoch)
-                    torch.save(net.state_dict(), snapshot_path)
+                    torch.save(net.state_dict(), os.path.join(log_dirpath, snapshot_name))
 
                 net.train()
 
