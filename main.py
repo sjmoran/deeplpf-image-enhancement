@@ -107,7 +107,10 @@ def main():
              "1e-3, at which the term contributes ~0.07%% of the L1 gradient "
              "and cannot affect training. Raise it to test whether the "
              "structural term matters when it is not decorative.")
+
     parser.add_argument(
+        "--gate_weight", type=float, required=False, default=None,
+        help="weight on the gates L1 penalty (fixes=...,gates); default 3e-3")    parser.add_argument(
         "--seed", type=int, required=False, default=None,
         help="Seed for torch, numpy and Python RNGs. Without it every run "
              "starts from a different initialisation and shuffle order, so "
@@ -144,7 +147,7 @@ def main():
              "wiring,ellipse,ste,msssim. Default 'none'.")
 
     args = parser.parse_args()
-    active_fixes = fixes.configure(args.fixes, args.msssim_weight)
+    active_fixes = fixes.configure(args.fixes, args.msssim_weight, args.gate_weight)
 
     if args.seed is not None:
         # Seed every source the training loop draws on: weight init, the
@@ -177,6 +180,8 @@ def main():
     logging.info('TF32: ' + str(args.tf32) + ', torch.compile: ' + str(args.use_compile)
                  + ', CUDA graphs: ' + str(args.cuda_graphs) + ', amp: ' + str(args.amp))
     logging.info('MS-SSIM weight: ' + str(fixes.msssim_weight()))
+    if fixes.enabled('gates'):
+        logging.info('Gate penalty weight: ' + str(fixes.gate_weight()))
     logging.info('v2 fixes enabled: ' + (', '.join(active_fixes) or 'none (v1 model)'))
     logging.info('Logging directory: ' + str(log_dirpath))
     logging.info('Dump validation accuracy every: ' + str(valid_every))

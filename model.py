@@ -493,8 +493,12 @@ class GraduatedFilter(nn.Module):
         self.graduated_layer6 = MaxPoolBlock()
         self.graduated_layer7 = ConvBlock(num_out_channels, num_out_channels)
         self.graduated_layer8 = GlobalPoolingBlock(2)
+        # 24 filter parameters, plus one gate per instance when the `gates`
+        # feature is on (see fixes.py). The extra outputs change the layer
+        # shape, so gated and ungated checkpoints are not interchangeable.
         self.fc_graduated = torch.nn.Linear(
-            num_out_channels, 24)
+            num_out_channels, 24 + (fixes.GATES_PER_BRANCH
+                                    if fixes.enabled('gates') else 0))
         self.upsample = torch.nn.Upsample(size=(300, 300), mode='bilinear',align_corners=False)
         self.dropout = nn.Dropout(0.5)
         self.bin_layer = BinaryLayer()
@@ -686,11 +690,37 @@ class GraduatedFilter(nn.Module):
             top_line.unsqueeze(2))
         mask_scale = torch.clamp(mask_scale, 0, max_scale)
 
+        # `gates` feature: one learned gate per instance, so the branch can use
+        # fewer than three filters. Applied before the product, where a gate at
+        # zero makes its instance exactly 1 and drops out of the fuse.
+        if fixes.enabled('gates'):
+            self.gates = self.tanh01(G[:, 24:27])
+            mask_scale = _apply_gates(mask_scale, self.gates)
+
         # Fuse the three instances by element-wise multiplication: s_g = prod_i s_gi (Eq. 7)
         mask_scale = torch.clamp(
             mask_scale[:, 0]*mask_scale[:, 1]*mask_scale[:, 2], 0, max_scale)
 
         return mask_scale
+
+
+def _apply_gates(mask_scale, gates):
+    """Scale each instance's deviation from neutral by its gate.
+
+    ``1 + g * (s - 1)`` is the identity at ``g = 0`` and leaves ``s`` untouched
+    at ``g = 1``. Since instances fuse by multiplication and 1 is the
+    multiplicative identity, a gate at zero removes its instance from the
+    product exactly, at no cost to the remaining ones - which is what makes an
+    L1 penalty on the gates a penalty on the number of active filters.
+
+    :param mask_scale: per-instance scaling maps, (B, instance, channel, H, W)
+    :param gates: gate per instance in [0, 1], (B, instance)
+    :returns: gated scaling maps, same shape as ``mask_scale``
+    :rtype: Tensor
+
+    """
+    g = gates.view(-1, gates.shape[1], 1, 1, 1)
+    return 1.0 + g * (mask_scale - 1.0)
 
 
 class EllipticalFilter(nn.Module):
@@ -724,8 +754,10 @@ class EllipticalFilter(nn.Module):
         self.elliptical_layer6 = MaxPoolBlock()
         self.elliptical_layer7 = ConvBlock(num_out_channels, num_out_channels)
         self.elliptical_layer8 = GlobalPoolingBlock(2)
+        # 24 filter parameters, plus one gate per instance under `gates`.
         self.fc_elliptical = torch.nn.Linear(
-            num_out_channels, 24)  # elliptical
+            num_out_channels, 24 + (fixes.GATES_PER_BRANCH
+                                    if fixes.enabled('gates') else 0))  # elliptical
         self.upsample = torch.nn.Upsample(size=(300, 300), mode='bilinear',align_corners=False)
         self.dropout = nn.Dropout(0.5)
         self._sel_cache = {}  # per-device (instance, channel) selector, see mask_from_input
@@ -906,6 +938,11 @@ class EllipticalFilter(nn.Module):
                                    shift_x=x_coord, shift_y=y_coord, semi_axis_x=a, semi_axis_y=semi_axis_y,
                                    alpha=angle, scale_factor=scale, radius=radius)
         mask_scale_rad = torch.clamp(mask_scale, 0, max_scale)
+
+        # `gates` feature: see GraduatedFilter.mask_from_input.
+        if fixes.enabled('gates'):
+            self.gates = self.tanh01(G[:, 24:27])
+            mask_scale_rad = _apply_gates(mask_scale_rad, self.gates)
 
         # Fuse the three instances by element-wise multiplication: s_e = prod_i s_ei (Eq. 7)
         mask_scale_elliptical = torch.clamp(
@@ -1096,6 +1133,13 @@ class DeepLPFParameterPrediction(nn.Module):
             mask_scale_fuse = torch.clamp(
                 mask_scale_graduated+mask_scale_elliptical, 0, 2)
 
+        # Mean gate over both branches' instances, in [0, 1]. Penalising this
+        # is penalising the expected number of active filters; the training
+        # step adds fixes.gate_weight() * gate_penalty to the loss.
+        if fixes.enabled('gates'):
+            self.gate_penalty = torch.cat(
+                (self.graduated_filter.gates, self.elliptical_filter.gates), 1).mean()
+
         img_fuse = torch.clamp(img_cubic*mask_scale_fuse, 0, 1)
 
         # Global skip connection: Y = Y3 + Y1
@@ -1133,5 +1177,10 @@ class DeepLPFNet(nn.Module):
         """
         feat = self.backbonenet(img)
         img = self.deeplpfnet(feat)
-        
+
+        # Surface the gate penalty of the last forward pass so the training
+        # step can add it to the loss without changing this signature.
+        if fixes.enabled('gates'):
+            self.gate_penalty = self.deeplpfnet.gate_penalty
+
         return img

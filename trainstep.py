@@ -25,6 +25,8 @@ What the capture changes and what it does not:
 """
 import torch
 
+import fixes
+
 
 class EagerStep:
     """The plain training step: forward, loss, backward, Adam."""
@@ -49,7 +51,14 @@ class EagerStep:
         # 30% of their scale against fp32.
         with self._autocast(x.device.type):
             pred = self.net(x)
-        return self.criterion(torch.clamp(pred.float(), 0.0, 1.0), y)
+        loss = self.criterion(torch.clamp(pred.float(), 0.0, 1.0), y)
+        # `gates` feature: the L1 penalty on the per-instance gates, which is
+        # what makes the number of active filters learned rather than fixed.
+        # Added here so it is inside any CUDA-graph capture region, alongside
+        # the loss it joins.
+        if fixes.enabled('gates'):
+            loss = loss + fixes.gate_weight() * self.net.gate_penalty.float()
+        return loss
 
     def __call__(self, x, y):
         """Run one step; returns the loss as a 0-d device tensor."""

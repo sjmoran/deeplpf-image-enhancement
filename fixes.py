@@ -30,16 +30,55 @@ effect.
     Group the MS-SSIM product as ``prod(pow1[:-1]) * pow2[-1]``, matching
     upstream jorge-pessoa/pytorch-msssim.
 
+Separately from the fixes, :data:`FEATURES` holds additions that change what
+the model can express rather than correcting it. They are opt-in by name and
+are deliberately *not* included in ``'all'``, so that ``--fixes=all`` keeps
+meaning "every correction, and nothing else".
+
+``gates``
+    Predict one gate per filter instance and scale that instance's deviation
+    from neutral by it, so an instance can switch itself off. With an L1
+    penalty on the gates the model learns how many filter instances the image
+    needs, instead of always using the hardcoded three per branch. Requires
+    ``fusion``: without it two neutral branches compose to ``S = 2`` rather
+    than the identity, so switching filters off is not free and the penalty
+    fights the reconstruction loss.
+
 Set the active fixes once at startup with :func:`configure`; read them with
 :func:`enabled`.
 """
 
 ALL_FIXES = ('wiring', 'ellipse', 'ste', 'msssim', 'fusion', 'blend')
 
+#: Opt-in capabilities, excluded from ``'all'`` (see the module docstring).
+FEATURES = ('gates',)
+
+#: Instances per filter branch that a gate can switch off.
+GATES_PER_BRANCH = 3
+
+PUBLISHED_GATE_WEIGHT = 3e-3
+
 PUBLISHED_MSSSIM_WEIGHT = 1e-3
 
 _active = frozenset()
 _msssim_weight = PUBLISHED_MSSSIM_WEIGHT
+_gate_weight = PUBLISHED_GATE_WEIGHT
+
+
+def gate_weight():
+    """Weight on the L1 gate penalty that drives the learnable filter count.
+
+    The penalty is the mean gate value over all six instances, so it lies in
+    [0, 1] and the weighted term is directly comparable with the Lab L1 loss,
+    which sits around 0.035 once trained. Too small and every gate pins at 1
+    (the published fixed-three model); too large and the branches collapse to
+    the identity. Only meaningful with the ``gates`` feature enabled.
+
+    :returns: the active weight
+    :rtype: float
+
+    """
+    return _gate_weight
 
 
 def msssim_weight():
@@ -58,22 +97,28 @@ def msssim_weight():
     return _msssim_weight
 
 
-def configure(spec, msssim_weight=None):
+def configure(spec, msssim_weight=None, gate_weight=None):
     """Set the active fixes from a command-line spec.
 
     :param spec: ``'none'``, ``'all'``, or a comma-separated subset of
-                 :data:`ALL_FIXES` (e.g. ``'wiring,ste'``)
+                 :data:`ALL_FIXES` and :data:`FEATURES` (e.g. ``'wiring,ste'``).
+                 ``'all'`` means every fix in :data:`ALL_FIXES`; features are
+                 never implied and must be named.
     :param msssim_weight: override for the Eq. 8 MS-SSIM weight; ``None`` keeps
                           the published :data:`PUBLISHED_MSSSIM_WEIGHT`
+    :param gate_weight: override for the ``gates`` L1 penalty weight; ``None``
+                        keeps :data:`PUBLISHED_GATE_WEIGHT`
     :returns: the active fixes, sorted
     :rtype: tuple
     :raises ValueError: if a name is not one of :data:`ALL_FIXES`
 
     """
-    global _active, _msssim_weight
+    global _active, _msssim_weight, _gate_weight
 
     _msssim_weight = (PUBLISHED_MSSSIM_WEIGHT if msssim_weight is None
                       else float(msssim_weight))
+    _gate_weight = (PUBLISHED_GATE_WEIGHT if gate_weight is None
+                    else float(gate_weight))
 
     spec = (spec or 'none').strip().lower()
     if spec == 'all':
@@ -82,11 +127,18 @@ def configure(spec, msssim_weight=None):
         names = set()
     else:
         names = {part.strip() for part in spec.split(',') if part.strip()}
-        unknown = names - set(ALL_FIXES)
+        unknown = names - set(ALL_FIXES) - set(FEATURES)
         if unknown:
             raise ValueError(
-                'unknown fix(es) %s; choose from %s, or "all"/"none"'
-                % (', '.join(sorted(unknown)), ', '.join(ALL_FIXES)))
+                'unknown fix(es) %s; choose from %s, the features %s, '
+                'or "all"/"none"'
+                % (', '.join(sorted(unknown)), ', '.join(ALL_FIXES),
+                   ', '.join(FEATURES)))
+        if 'gates' in names and 'fusion' not in names:
+            raise ValueError(
+                'the "gates" feature requires "fusion": without it two neutral '
+                'branches compose to S = 2 rather than the identity, so '
+                'switching a filter off is not free')
 
     _active = frozenset(names)
     return tuple(sorted(_active))
@@ -95,7 +147,7 @@ def configure(spec, msssim_weight=None):
 def enabled(name):
     """Is this fix active?
 
-    :param name: one of :data:`ALL_FIXES`
+    :param name: one of :data:`ALL_FIXES` or :data:`FEATURES`
     :returns: whether the fix is enabled
     :rtype: bool
 

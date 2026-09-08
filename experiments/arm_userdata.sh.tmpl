@@ -1,7 +1,8 @@
 #!/bin/bash
 # One ablation arm, start to finish, unattended. Runs as root at boot.
 #
-# Placeholders __ARM_NAME__, __FIX_SPEC__, __EPOCHS__, __HARD_CAP__ and
+# Placeholders __ARM_NAME__, __FIX_SPEC__, __EPOCHS__, __HARD_CAP__,
+# __EXTRA_ARGS__ and
 # __BUCKET__ are substituted by launch_ablation.sh.
 #
 # The instance is launched with instance-initiated-shutdown-behavior=terminate,
@@ -17,6 +18,8 @@ set -u
 ARM_NAME="__ARM_NAME__"
 FIX_SPEC="__FIX_SPEC__"
 SEED=__SEED__
+# Extra flags for this arm (e.g. --gate_weight=1e-2); empty for most arms.
+EXTRA_ARGS="__EXTRA_ARGS__"
 EPOCHS=__EPOCHS__
 HARD_CAP_HOURS=__HARD_CAP__
 BUCKET="__BUCKET__"
@@ -74,7 +77,9 @@ $PY -u "$RUN/repo/main.py" \
     --test_img_list_path="$RUN/adobe5k_dpe/images_test.txt" \
     --batch_size=1 \
     --seed=$SEED \
+    --cuda_graphs \
     --valid_every=25 \
+    $EXTRA_ARGS \
     > "$RUN/out/train.log" 2>&1
 
 echo "=== training exited $? at $(date -u) ==="
