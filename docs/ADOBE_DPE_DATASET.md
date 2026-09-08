@@ -38,11 +38,17 @@ C** as the **target**.
 
 ## Step 2 — Export the input images
 
-1. In **Collections**, select an entry under `Inputs`. The commonly used choice
-   (from the [FiveK-with-Lightroom guide](https://github.com/yuanming-hu/exposure/wiki/Preparing-data-for-the-MIT-Adobe-FiveK-Dataset-with-Lightroom))
-   is `Inputs/Input with Daylight WhiteBalance minus 1.5`. The exact DPE input
-   rendering is not fully documented; Step 5 tells you how to confirm your
-   choice against the bundled reference images, so pick one and validate.
+1. In **Collections**, select `InputAsShotZeroed`. This is the rendering to use:
+   exports from it reproduce this repo's bundled reference inputs exactly
+   (`mean|Δ| = 0.00` on 9 of the 10 reference images), and it is the collection
+   named by the [FiveK-with-Lightroom guide](https://github.com/yuanming-hu/exposure/wiki/Preparing-data-for-the-MIT-Adobe-FiveK-Dataset-with-Lightroom).
+   Note that DPE's own README does not state which input collection it used, so
+   this is established by matching the reference images rather than by citation.
+
+   Earlier versions of this document recommended
+   `Inputs/Input with Daylight WhiteBalance minus 1.5`. That is **wrong** — the
+   `minus 1.5` is a −1.5 EV exposure cut, and it yields inputs roughly
+   1.6× too dark, failing the Step 5 check with `mean|Δ|` around 20–60.
 2. Select all images (`Ctrl`/`Cmd`-`A`), right-click, **Export**.
 3. Export settings:
    - **Format:** PNG
