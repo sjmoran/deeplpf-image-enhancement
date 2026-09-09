@@ -17,7 +17,7 @@ the two exports is skipped with a warning.
 
 Usage:
     python data_prep/organise_fivek.py INPUT_EXPORT_DIR TARGET_EXPORT_DIR OUT_DIR
-                                        [--long-edge 512] [--no-resize] [--symlink]
+                                        [--long-edge 512] [--no-resize]
 """
 import argparse
 import os

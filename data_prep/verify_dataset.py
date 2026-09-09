@@ -32,7 +32,14 @@ from data import Adobe5kDataLoader  # noqa: E402
 
 def check_split(data_dir, split_file):
     loader = Adobe5kDataLoader(data_dirpath=data_dir + "/", img_ids_filepath=split_file)
-    data_dict = loader.load_data()
+    try:
+        # This script exists to diagnose an incomplete or misplaced export, so
+        # the loader's own complaints about missing files are the condition it
+        # is reporting on, not a reason to stop.
+        data_dict = loader.load_data(require_output=False)
+    except FileNotFoundError as exc:
+        print(f"         {exc}")
+        data_dict = {}
 
     with open(split_file) as f:
         wanted = [line.strip() for line in f if line.strip()]

@@ -149,3 +149,20 @@ def test_checkpoint_prefix_is_resolved_by_trying_both_ways():
     report = run_audit(Plain, forward, ckpt=wrapped)
     assert not [e for e in report.errors if e[0] == 'ckpt'], \
         'a real DataParallel prefix was not stripped: %s' % report.errors
+
+
+def test_a_skipped_check_is_a_note_not_an_error():
+    """Auditing without a checkpoint is ordinary, and must not print ERROR."""
+    import torch.nn as nn
+
+    class Tiny(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.fc = nn.Linear(4, 2)
+
+        def forward(self, x):
+            return self.fc(x)
+
+    report = audit(build=Tiny, forward=lambda m: m(torch.randn(2, 4)))
+    assert report.errors == []
+    assert any(stage == 'inert' for stage, _ in report.notes)

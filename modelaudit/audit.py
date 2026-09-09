@@ -59,6 +59,10 @@ class Report:
         self.inert = []            # (name, reason)
         self.loss_shares = {}      # name -> (grad_norm, share)
         self.errors = []           # (stage, message)
+        # Conditions that are expected rather than wrong, e.g. a check that
+        # needs a checkpoint when none was supplied. These were reported as
+        # ERROR, which reads as "the audit broke" on a perfectly ordinary run.
+        self.notes = []            # (stage, message)
         self.init_only = []        # dead at init but alive after perturbation
         self.used_functionally = []  # hook silent but params got gradient -> NOT dead
         self.n_params = 0
@@ -95,6 +99,8 @@ class Report:
         print(f"params={self.n_params} leaf_modules={self.n_modules}")
         for stage, msg in self.errors:
             print(f"  ERROR [{stage}] {msg}")
+        for stage, msg in self.notes:
+            print(f"  NOTE  [{stage}] {msg}")
         for k, v in self.flags().items():
             print(f"  {k}: {'HIT' if v else 'clean'}")
         for n, r in self.dead_params:
@@ -165,8 +171,8 @@ def _check_inert(model, acts, rep, have_ckpt, acts2=None):
     # real weights are loaded. On a freshly built model every layer is trivially
     # inside its init interval and every scale is trivially at its init value.
     if not have_ckpt:
-        rep.errors.append(("inert", "no checkpoint supplied: checks 3a/3b (init-interval, "
-                                    "pinned scales) skipped; only constant-activation 3c ran"))
+        rep.notes.append(("inert", "no checkpoint supplied: checks 3a/3b (init-interval, "
+                                   "pinned scales) skipped; only constant-activation 3c ran"))
     if have_ckpt:
       # (a) weights that never left their initialisation interval
       for name, mod in model.named_modules():
