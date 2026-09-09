@@ -83,20 +83,27 @@ class Dataset(torch.utils.data.Dataset):
 
                 input_img = util.ImageProcessing.load_image(
                     self.data_dict[idx]['input_img'], normaliser=self.normaliser)
-                output_img = util.ImageProcessing.load_image(
-                    self.data_dict[idx]['output_img'], normaliser=self.normaliser)
-
                 if self.normaliser==1:
                     input_img = input_img.astype(np.uint8)
-                    output_img = output_img.astype(np.uint8)
-
                 input_img = TF.to_pil_image(input_img)
                 input_img = TF.to_tensor(input_img)
-                output_img = TF.to_pil_image(output_img)
-                output_img = TF.to_tensor(output_img)
 
-                return {'input_img': input_img, 'output_img': output_img,
-                        'name': self.data_dict[idx]['input_img'].split("/")[-1]}
+                sample = {'input_img': input_img,
+                          'name': self.data_dict[idx]['input_img'].split("/")[-1]}
+
+                # Enhancing your own photographs means there is no retouched
+                # target to compare against, so the target is optional here and
+                # the caller checks for it. It is not optional for training.
+                target_path = self.data_dict[idx].get('output_img')
+                if target_path is not None:
+                    output_img = util.ImageProcessing.load_image(
+                        target_path, normaliser=self.normaliser)
+                    if self.normaliser==1:
+                        output_img = output_img.astype(np.uint8)
+                    output_img = TF.to_pil_image(output_img)
+                    sample['output_img'] = TF.to_tensor(output_img)
+
+                return sample
 
             elif idx in self.data_dict:
 
@@ -196,9 +203,12 @@ class Adobe5kDataLoader(DataLoader):
         super().__init__(data_dirpath, img_ids_filepath)
         self.data_dict = defaultdict(dict)
 
-    def load_data(self):
+    def load_data(self, require_output=True):
         """ Loads the Adobe5k image data into a Python dictionary
 
+        :param require_output: fail if an image has no retouched target. False
+                               for inference over images you only have inputs
+                               for, where there is nothing to compare against.
         :returns: Python two-level dictionary containing the images
         :rtype: Dictionary of dictionaries
 
@@ -242,8 +252,21 @@ class Adobe5kDataLoader(DataLoader):
 
                     logging.debug("Excluding file with id: " + str(img_id))
 
+        # These were `assert 'input_img' in imgs`, which a defaultdict entry
+        # satisfies while holding None, so a missing file surfaced much later
+        # as `'NoneType' object has no attribute 'read'` inside a DataLoader
+        # worker. Check the values, and say which image is short of what.
         for idx, imgs in self.data_dict.items():
-            assert ('input_img' in imgs)
-            assert ('output_img' in imgs)
+            name = imgs.get('input_img') or imgs.get('output_img') or ('index %d' % idx)
+            if imgs.get('input_img') is None:
+                raise FileNotFoundError(
+                    'no input image for %s: expected one under an "input" '
+                    'directory below %s' % (name, self.data_dirpath))
+            if require_output and imgs.get('output_img') is None:
+                raise FileNotFoundError(
+                    'no target image for %s: expected one under an "output" '
+                    'directory below %s. Inference over images you have no '
+                    'target for is supported; training and evaluation are not.'
+                    % (name, self.data_dirpath))
 
         return self.data_dict

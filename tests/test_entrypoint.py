@@ -12,6 +12,7 @@ runs. Compiling the file and importing it are what actually catch it.
 """
 
 import py_compile
+import shutil
 import subprocess
 import sys
 import glob
@@ -85,3 +86,53 @@ def test_help_and_bad_flags_leave_no_directories(tmp_path):
         subprocess.run([sys.executable, os.path.join(REPO, 'main.py')] + argv,
                        cwd=tmp_path, capture_output=True, text=True)
     assert list(tmp_path.iterdir()) == []
+
+
+def test_inference_without_targets_writes_enhanced_images(tmp_path):
+    """Enhancing your own photographs must work without retouched targets.
+
+    The dataset loaded input and target unconditionally, so a directory with no
+    ``output`` images died inside a DataLoader worker with ``'NoneType' object
+    has no attribute 'read'`` - on what is the first thing most people try.
+    """
+    src = os.path.join(REPO, 'adobe5k_dpe', 'deeplpf_example_test_input',
+                       'a4514-kme_0258.png')
+    data = tmp_path / 'data' / 'input'
+    data.mkdir(parents=True)
+    shutil.copy(src, data)
+    ids = tmp_path / 'ids.txt'
+    ids.write_text('a4514\n')
+
+    ckpt = glob.glob(os.path.join(REPO, 'pretrained_models', 'adobe_dpe', '*.pt'))[0]
+    result = subprocess.run(
+        [sys.executable, os.path.join(REPO, 'main.py'),
+         '--inference_img_list_path=' + str(ids),
+         '--inference_img_dirpath=' + str(tmp_path / 'data'),
+         '--checkpoint_filepath=' + ckpt],
+        cwd=tmp_path, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr[-2000:]
+    written = glob.glob(str(tmp_path / 'log_*' / 'inference' / '*_enhanced.png'))
+    assert len(written) == 1, result.stderr[-2000:]
+
+
+def test_training_names_the_image_missing_its_target(tmp_path):
+    """A missing target must name the file, not fail inside a worker."""
+    sys.path.insert(0, REPO)
+    from data import Adobe5kDataLoader
+
+    src = os.path.join(REPO, 'adobe5k_dpe', 'deeplpf_example_test_input',
+                       'a4514-kme_0258.png')
+    data = tmp_path / 'data' / 'input'
+    data.mkdir(parents=True)
+    shutil.copy(src, data)
+    ids = tmp_path / 'ids.txt'
+    ids.write_text('a4514\n')
+
+    loader = Adobe5kDataLoader(data_dirpath=str(tmp_path / 'data'),
+                               img_ids_filepath=str(ids))
+    try:
+        loader.load_data()
+    except FileNotFoundError as exc:
+        assert 'a4514-kme_0258.png' in str(exc)
+    else:
+        raise AssertionError('a missing target must raise')
