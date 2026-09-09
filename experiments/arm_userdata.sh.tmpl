@@ -44,9 +44,9 @@ RUN=$WORK/deeplpf
 mkdir -p "$RUN/out" && cd "$RUN" || exit 1
 
 echo "=== staging ==="
-aws s3 cp $BUCKET/code.tgz . --only-show-errors || exit 1
+aws s3 cp $BUCKET/__CODE_TGZ__ . --only-show-errors || exit 1
 aws s3 cp $BUCKET/data.tgz . --only-show-errors || exit 1
-mkdir -p repo && tar xzf code.tgz -C repo
+mkdir -p repo && tar xzf __CODE_TGZ__ -C repo
 tar xzf data.tgz
 # data.tgz carries a copy of adobe5k_dpe/ from whenever it was built, so the
 # split lists in it can be stale. The repository is the source of truth.

@@ -34,7 +34,15 @@ TMPL=$HERE/arm_userdata.sh.tmpl
 WORKDIR=$(mktemp -d)
 trap 'rm -rf "$WORKDIR"' EXIT
 
-# arm name : --fixes value
+# The split lists to stage: a directory in the repo holding images_*.txt.
+SPLIT_DIR="${SPLIT_DIR:-adobe5k_dpe}"
+# The code archive in $BUCKET to run. Build one with
+#   git archive --format=tar.gz -o code.tgz HEAD && aws s3 cp code.tgz $BUCKET/
+CODE_TGZ="${CODE_TGZ:-code.tgz}"
+
+# arm name : --fixes value [: extra main.py flags]. Override with ARMS_SPEC,
+# one entry per line; the extra-flags field may itself contain spaces, which is
+# why the split is on newlines and not on whitespace.
 ARMS=(
   "baseline:none"
   "wiring:wiring"
@@ -44,11 +52,23 @@ ARMS=(
   "fusion:fusion"
 )
 
+# Not mapfile: macOS ships bash 3.2, which does not have it.
+if [ -n "${ARMS_SPEC:-}" ]; then
+  ARMS=()
+  while IFS= read -r line; do
+    [ -n "$line" ] && ARMS+=("$line")
+  done <<< "$ARMS_SPEC"
+fi
+
 read -ra SUBNET_ARR <<< "$SUBNETS"
 i=0
 for entry in "${ARMS[@]}"; do
   NAME="${entry%%:*}"
-  SPEC="${entry##*:}"
+  rest="${entry#*:}"
+  SPEC="${rest%%:*}"
+  # Empty for arms with no extra flags, i.e. entries with only two fields.
+  EXTRA=""
+  [ "$rest" != "$SPEC" ] && EXTRA="${rest#*:}"
   SUBNET="${SUBNET_ARR[$((i % ${#SUBNET_ARR[@]}))]}"
   i=$((i + 1))
 
@@ -58,6 +78,9 @@ for entry in "${ARMS[@]}"; do
       -e "s|__HARD_CAP__|$HARD_CAP|" \
       -e "s|__BUCKET__|$BUCKET|" \
       -e "s|__SEED__|$SEED|" \
+      -e "s|__EXTRA_ARGS__|$EXTRA|" \
+      -e "s|__SPLIT_DIR__|$SPLIT_DIR|" \
+      -e "s|__CODE_TGZ__|$CODE_TGZ|" \
       "$TMPL" > "$WORKDIR/ud_$NAME.sh"
 
   ID=$(aws ec2 run-instances --region "$REGION" --profile "$PROFILE" \
@@ -70,5 +93,5 @@ for entry in "${ARMS[@]}"; do
     --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=deeplpf-arm-$NAME},{Key=Project,Value=deeplpf-v2-ablation},{Key=Arm,Value=$NAME}]" \
     --user-data "file://$WORKDIR/ud_$NAME.sh" \
     --query 'Instances[0].InstanceId' --output text)
-  printf "%-9s --fixes=%-9s %s (%s)\n" "$NAME" "$SPEC" "$ID" "$SUBNET"
+  printf "%-12s --fixes=%-28s %-12s %s (%s)\n" "$NAME" "$SPEC" "$EXTRA" "$ID" "$SUBNET"
 done
