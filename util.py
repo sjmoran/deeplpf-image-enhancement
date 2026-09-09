@@ -178,6 +178,11 @@ class ImageProcessing(object):
 
         """
         img = np.array(Image.open(img_filepath))
+        if img.ndim == 2:
+            # Greyscale: repeat the single channel, since every convolution in
+            # the network expects three. Without this a greyscale photograph
+            # reached the first conv and failed with a shape mismatch.
+            img = np.stack([img] * 3, axis=2)
         if img.ndim == 3 and img.shape[2] == 4:
             # Drop an alpha channel if present (RGBA -> RGB); the network is
             # trained on 3-channel RGB input.

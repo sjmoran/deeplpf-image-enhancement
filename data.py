@@ -229,7 +229,12 @@ class Adobe5kDataLoader(DataLoader):
 
             for file in files:
 
-                img_id = file.split("-")[0]
+                # The id is the filename up to the first "-", e.g.
+                # "a0001-jmac_DSC1459.png" -> "a0001". Strip any extension so
+                # that a file with no "-" in its name, which is what people's
+                # own photographs look like, still matches its listed id
+                # instead of silently matching nothing.
+                img_id = os.path.splitext(file.split("-")[0])[0]
 
                 if img_id in image_ids_list:  # the image belongs to this train/valid/test split
 
@@ -251,6 +256,14 @@ class Adobe5kDataLoader(DataLoader):
                 else:
 
                     logging.debug("Excluding file with id: " + str(img_id))
+
+        if not self.data_dict:
+            raise FileNotFoundError(
+                'none of the %d ids in %s matched an image under %s. An id is '
+                'the filename up to the first "-", without its extension, and '
+                'the images must sit in an "input" directory (with their '
+                'targets, if any, in "output").'
+                % (len(image_ids_list), self.img_ids_filepath, self.data_dirpath))
 
         # These were `assert 'input_img' in imgs`, which a defaultdict entry
         # satisfies while holding None, so a missing file surfaced much later

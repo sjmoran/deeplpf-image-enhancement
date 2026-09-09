@@ -136,3 +136,64 @@ def test_training_names_the_image_missing_its_target(tmp_path):
         assert 'a4514-kme_0258.png' in str(exc)
     else:
         raise AssertionError('a missing target must raise')
+
+
+def test_ids_match_files_named_without_a_dash(tmp_path):
+    """A photograph named "myphoto.png" must match the listed id "myphoto".
+
+    The id was ``file.split("-")[0]``, so a filename with no "-" kept its
+    extension and matched nothing. The run then did nothing at all, silently.
+    """
+    sys.path.insert(0, REPO)
+    from data import Adobe5kDataLoader
+
+    src = os.path.join(REPO, 'adobe5k_dpe', 'deeplpf_example_test_input',
+                       'a4514-kme_0258.png')
+    data = tmp_path / 'data' / 'input'
+    data.mkdir(parents=True)
+    shutil.copy(src, data / 'myphoto.png')
+    shutil.copy(src, data)  # keeps the dashed convention working too
+    ids = tmp_path / 'ids.txt'
+    ids.write_text('myphoto\na4514\n')
+
+    entries = Adobe5kDataLoader(data_dirpath=str(tmp_path / 'data'),
+                                img_ids_filepath=str(ids)).load_data(
+                                    require_output=False)
+    assert len(entries) == 2
+
+
+def test_a_list_matching_nothing_is_an_error(tmp_path):
+    """Matching no images must say so rather than run over an empty set."""
+    sys.path.insert(0, REPO)
+    from data import Adobe5kDataLoader
+
+    data = tmp_path / 'data' / 'input'
+    data.mkdir(parents=True)
+    ids = tmp_path / 'ids.txt'
+    ids.write_text('nothing_here\n')
+
+    try:
+        Adobe5kDataLoader(data_dirpath=str(tmp_path / 'data'),
+                          img_ids_filepath=str(ids)).load_data(
+                              require_output=False)
+    except FileNotFoundError as exc:
+        assert 'matched an image under' in str(exc)
+    else:
+        raise AssertionError('an empty match must raise')
+
+
+def test_greyscale_images_load_as_three_channels():
+    """Every convolution expects three channels; a greyscale photo has one."""
+    sys.path.insert(0, REPO)
+    import numpy as np
+    from PIL import Image
+    from util import ImageProcessing
+
+    import tempfile
+    src = os.path.join(REPO, 'adobe5k_dpe', 'deeplpf_example_test_input',
+                       'a4514-kme_0258.png')
+    with tempfile.TemporaryDirectory() as tmp:
+        grey = os.path.join(tmp, 'grey.png')
+        Image.open(src).convert('L').save(grey)
+        img = ImageProcessing.load_image(grey, normaliser=1)
+        assert img.ndim == 3 and img.shape[2] == 3, img.shape
