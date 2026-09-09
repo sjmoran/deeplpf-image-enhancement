@@ -9,7 +9,7 @@
 
 [[Paper]](https://arxiv.org/abs/2003.13985) [[Poster]](https://github.com/sjmoran/sjmoran.github.io/blob/main/pdfs/DeepLPF_CVPR20_poster.pdf) [[Video]](https://www.youtube.com/watch?v=Sxach3FM6FY) [[Supplementary]](https://github.com/sjmoran/sjmoran.github.io/blob/7775d1fc39d14baeb6935f6c750f923e1251f491/pdfs/DeepLPF_supplementary.pdf)
 
-Official PyTorch implementation of the CVPR 2020 paper **DeepLPF: Deep Local Parametric Filters for Image Enhancement**. Instead of predicting output pixels directly, DeepLPF regresses the parameters of a small set of spatially localised image filters (cubic, graduated and elliptical) and applies them, giving an interpretable retouching model. On the Adobe-DPE benchmark the bundled pre-trained model reaches **23.90 dB PSNR / 0.911 SSIM**.
+Official PyTorch implementation of the CVPR 2020 paper **DeepLPF: Deep Local Parametric Filters for Image Enhancement**. Instead of predicting output pixels directly, DeepLPF regresses the parameters of a small set of spatially localised image filters (cubic, graduated and elliptical) and applies them, giving an interpretable retouching model. The bundled pre-trained model scores **23.90 dB PSNR / 0.911 SSIM**, and this repository states the protocol behind every number it reports — see [Which number, which protocol](#which-number-which-protocol), which is the axis most FiveK comparisons get wrong.
 
 <p align="center">
 <img src="./images/teaser.png" width="80%"/>
@@ -51,11 +51,21 @@ The code picks the best available device automatically: a CUDA GPU, Apple Silico
 
 ## Results
 
-The bundled `adobe_dpe` checkpoint (epoch 424) on the Adobe-DPE test set:
+| Model | Split | PSNR | SSIM |
+|---|---|---|---|
+| bundled `adobe_dpe`, epoch 424 | reconstructed | 23.90 dB | 0.911 |
+| retrained, `--fixes=none` | recovered DPE | 23.38 dB | 0.897 |
+| retrained, `--fixes=blend,ellipse,fusion,ste` | recovered DPE | 23.76 dB | 0.901 |
+| published DeepLPF (NamedCurves Tab. 1) | DPE | 23.93 dB | 0.903 |
 
-| Dataset | PSNR | SSIM |
-|---|---|---|
-| Adobe-DPE | 23.90 dB | 0.911 |
+**Match the split column before comparing any two rows.** The bundled
+checkpoint was trained and scored under the reconstructed split, which overlaps
+the DPE protocol in 45 of ~500 test images; the retrained rows use the recovered
+original DPE lists and are the ones to line up against published DPE numbers.
+On the 45 images held out by both, the retrained model and the released
+checkpoint are statistically indistinguishable (paired difference -0.29 dB, 95%
+CI +/-1.10), which is the like-for-like comparison the two protocols permit.
+Training details in [docs/V2_ABLATION.md](./docs/V2_ABLATION.md).
 
 Input → expert-retouched label → DeepLPF output:
 
@@ -232,14 +242,12 @@ python3 main.py \
 Checkpoints are written whenever validation PSNR improves, into a timestamped
 `log_*` directory, with the metrics in the filename.
 
-**What to expect.** The released Adobe-DPE checkpoint is epoch 424 and scores
-**23.90 dB PSNR / 0.911 SSIM** — but that figure was measured on the best-guess
-split this repository shipped until September 2026, *not* on the DPE test set.
-[`adobe5k_dpe/`](./adobe5k_dpe/) now holds the recovered original DPE lists, and
-the two test sets have only 45 of ~500 images in common, so a run against the
-current lists is not directly comparable with 23.90 dB. Treat it as a rough
-target only; a like-for-like number on the recovered split has yet to be
-published here. See [`adobe5k_dpe/SPLIT_PROVENANCE.md`](./adobe5k_dpe/SPLIT_PROVENANCE.md).
+**What to expect.** On the recovered DPE lists, `--fixes=none` reaches 23.38 dB
+test PSNR after 500 epochs and the best fix combination reaches 23.76 dB, with
+longer schedules still improving; both are tabulated in
+[docs/V2_ABLATION.md](./docs/V2_ABLATION.md). Compare against those rows rather
+than the released checkpoint's 23.90, which belongs to the reconstructed split.
+See [`adobe5k_dpe/SPLIT_PROVENANCE.md`](./adobe5k_dpe/SPLIT_PROVENANCE.md).
 The fastest way to confirm your pipeline before committing to a full training
 run is the [Quick start](#quick-start) inference command — it runs the released
 checkpoint over the bundled examples and prints per-image PSNR/SSIM.
