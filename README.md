@@ -257,8 +257,8 @@ released checkpoint over the bundled examples and prints per-image PSNR/SSIM.
 `modelaudit/` is a standalone checker for the class of defect that does not
 raise an exception: a parameter that receives no gradient, a module built and
 never called, a component inert in a released checkpoint, a loss term weighted
-into irrelevance. One forward pass, one backward per loss term, CPU only, torch
-the only dependency — point it at any PyTorch model.
+into irrelevance. It runs one forward pass and one backward per loss term on
+the CPU, needs no dependency beyond torch, and works on any PyTorch model.
 
 ```python
 from modelaudit import audit
@@ -282,8 +282,8 @@ they are not comparable with one another. The same is true of every method on
 FiveK, and it is the most common way comparisons go wrong.
 
 **[docs/BENCHMARK_TABLE.md](./docs/BENCHMARK_TABLE.md)** states which number
-belongs to which protocol, what each protocol is, which split files reproduce
-it, and — where we cannot reproduce one — says so rather than implying
+belongs to which protocol, what each protocol is, and which split files
+reproduce it. Where we cannot reproduce one, it says so rather than implying
 otherwise. It also records the ICCV 2021 errata whose corrected DeepLPF figures
 never reached the CVF copy of that paper.
 
@@ -291,7 +291,9 @@ never reached the CVF copy of that paper.
 
 DeepLPF is trained on the [MIT-Adobe FiveK](https://data.csail.mit.edu/graphics/fivek/) photographs, processed through Lightroom with Expert C retouching as the target. For a step-by-step walkthrough (Lightroom export settings, the expected folder layout, and helper/verification scripts), see **[docs/ADOBE_DPE_DATASET.md](./docs/ADOBE_DPE_DATASET.md)**.
 
-- **Adobe-DPE** (5000 RGB→RGB pairs): download [here](https://data.csail.mit.edu/graphics/fivek/), then pre-process per the DeepPhotoEnhancer (DPE) [paper](https://github.com/nothinglo/Deep-Photo-Enhancer) (the `InputAsShotZeroed` Lightroom rendering as input, Expert C as target, both exported in sRGB); see the [DPE instructions](https://github.com/nothinglo/Deep-Photo-Enhancer/issues/38#issuecomment-449786636) and [Reproducing the Adobe-DPE results](#reproducing-the-adobe-dpe-results). The train/valid/test splits in [`adobe5k_dpe/`](./adobe5k_dpe/) are the **original DPE splits** (2250 / 2250 / **498**), recovered in September 2026 from a third-party mirror of the DPE release after every official link went dead — see [`adobe5k_dpe/SPLIT_PROVENANCE.md`](./adobe5k_dpe/SPLIT_PROVENANCE.md). They replace the best-guess reconstruction this repository shipped until then, which shared only 45 of its 500 test images with the real DPE test set.
+- **Adobe-DPE** (5000 RGB→RGB pairs): download [here](https://data.csail.mit.edu/graphics/fivek/), then pre-process per the DeepPhotoEnhancer (DPE) [paper](https://github.com/nothinglo/Deep-Photo-Enhancer), using the `InputAsShotZeroed` Lightroom rendering as input and Expert C as target, both exported in sRGB. See the [DPE instructions](https://github.com/nothinglo/Deep-Photo-Enhancer/issues/38#issuecomment-449786636) and [Reproducing the Adobe-DPE results](#reproducing-the-adobe-dpe-results).
+
+  The train/valid/test splits in [`adobe5k_dpe/`](./adobe5k_dpe/) are the **original DPE splits** (2250 / 2250 / **498**), recovered in September 2026 from a third-party mirror of the DPE release after every official link went dead. They replace the best-guess reconstruction this repository shipped until then, which shared only 45 of its 500 test images with the real DPE test set. Provenance in [`adobe5k_dpe/SPLIT_PROVENANCE.md`](./adobe5k_dpe/SPLIT_PROVENANCE.md).
 - **Adobe-UPE** (5000 RGB→RGB pairs): download [here](https://data.csail.mit.edu/graphics/fivek/), then pre-process per the DeepUPE [paper](https://github.com/wangruixing/DeepUPE) as detailed [here](https://github.com/wangruixing/DeepUPE/issues/26). Test images are [available here](https://drive.google.com/file/d/1HZnNgptNxjKJAhekz2K5yh0mW0yKIws2/view?usp=sharing).
 
 ## Original (CVPR 2020) code
@@ -316,7 +318,7 @@ year = {2020}
 
 ## License
 
-Released under the BSD-3-Clause License — see [LICENSE](./LICENSE).
+Released under the BSD-3-Clause License. See [LICENSE](./LICENSE).
 
 ## Contributing
 
