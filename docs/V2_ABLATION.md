@@ -47,6 +47,71 @@ with the others; PSNR is measured identically for all five.
 
 Results sync to `$BUCKET/results/<arm>/` every ten minutes.
 
+## Results
+
+### The fixes and features, 500 epochs
+
+Every arm below ran 500 epochs, seed 42, batch 1, on the recovered DPE split
+(2250 train / 2250 valid / 498 test), except `guessed_repl`, which ran on the
+superseded best-guess split and whose test column is therefore a different set
+of images.
+
+| Arm | `--fixes` | valid PSNR | test PSNR | test SSIM |
+|---|---|---|---|---|
+| `baseline` | none (v1) | 23.049 | 23.381 | 0.897 |
+| `wiring` | wiring | 23.030 | 23.355 | 0.890 |
+| `msssimw` | msssim | 22.901 | 23.333 | 0.897 |
+| `steblend` | blend, ste | 23.034 | 23.394 | 0.896 |
+| `ellipse` | ellipse | 23.213 | 23.565 | 0.902 |
+| `fusion` | fusion | 23.225 | 23.598 | 0.901 |
+| `comb_ef` | ellipse, fusion | 23.322 | 23.556 | 0.901 |
+| `comb_efsb` | blend, ellipse, fusion, ste | 23.256 | 23.763 | 0.901 |
+| `colour` | colour, fusion, 16 curve knots | 23.293 | 23.477 | 0.905 |
+| `colour_mix` | colour, fusion, 0 knots (mixer only) | 23.236 | 23.501 | 0.902 |
+| `gates_hi` | + gates, `--gate_weight` 1e-2 | 23.143 | 23.698 | 0.901 |
+| `gates_lo` | + gates, `--gate_weight` 3e-3 | 23.222 | 23.768 | 0.901 |
+| `gates_vlo` | + gates, `--gate_weight` 3e-4 | 23.298 | 23.592 | 0.900 |
+| `guessed_repl` | none (v1), best-guess split | 22.810 | 23.742 | 0.910 |
+
+`wiring` and `msssim` do not help on their own. `ellipse` and `fusion` carry
+what gain there is, and combining them with `ste` and `blend` is the best of
+the fix-only arms.
+
+**None of this is resolved.** Scoring each arm's best-validation checkpoint on
+the 498 test images and bootstrapping the paired per-image differences against
+`baseline` gives, for the four leading arms, +0.28, +0.21, +0.18 and +0.04 dB
+with 95% intervals of roughly +/-0.28 dB. Every interval contains zero, and
+that is the optimistic bound: it covers test-set sampling only, not the seed
+and checkpoint-selection variability that this document elsewhere identifies as
+the larger term. The three gate weights land within 0.05 dB of each other, so
+the gate weight is doing nothing measurable at n=498 either. Separating these
+arms needs several seeds each, not a larger test set.
+
+### The MS-SSIM weight
+
+Eq. 8's `w_msssim = 1e-3` makes the structural term contribute about 0.07% of
+the L1 gradient, so the published model is trained by L1 in Lab space alone.
+`--msssim_weight` exposes the weight. Five arms, 150 epochs each, all with
+`--fixes=blend,ellipse,fusion,ste,msssim` and seed 42, on the best-guess split:
+
+| `--msssim_weight` | best valid PSNR | test PSNR | test SSIM |
+|---|---|---|---|
+| 2e-1 | **22.983** | 24.053 | 0.911 |
+| 1e-2 | 22.803 | 23.750 | 0.903 |
+| 1.0 | 22.796 | 23.675 | 0.909 |
+| 5e-2 | 22.777 | 23.833 | 0.907 |
+| 1e-3 (published) | 22.734 | 23.809 | 0.907 |
+
+2e-1 leads on both splits and by the largest margin in the sweep, +0.18 dB
+valid over the next arm. The remaining four sit inside a 0.07 dB band whose
+validation and test orderings disagree - 1e-2 is second on validation and
+fourth on test - so only the first row is a result. The ordering also changed
+at every 25-epoch evaluation up to epoch 125, which is the reason not to read a
+150-epoch sweep as a ranking of anything but the extremes.
+
+Two 1000-epoch runs test whether the lead survives: `2e-1` against `1e-3` as
+the published control, same fixes, same seed, same split.
+
 ## Cost and shutdown
 
 Measured on a g5.xlarge (A10G), 2250 training images per epoch:
