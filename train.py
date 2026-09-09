@@ -72,6 +72,14 @@ def run_training(args, device, log_dirpath, writer):
                                                      shuffle=False,
                                                      num_workers=6)
     net = model.DeepLPFNet()
+    if args.checkpoint_filepath is not None:
+        # Fine-tuning from a saved model. This flag used to be read only on the
+        # inference path, so passing it here silently trained from scratch and
+        # the run looked identical to one that had never seen the checkpoint.
+        net.load_state_dict(torch.load(args.checkpoint_filepath,
+                                       map_location='cpu'))
+        logging.info('Initialised the network from ' + args.checkpoint_filepath
+                     + ' (weights only; the optimiser starts fresh)')
     net.to(device)
 
     logging.info('######### Network created #########')

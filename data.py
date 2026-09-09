@@ -37,11 +37,10 @@ class Dataset(torch.utils.data.Dataset):
     modes load the images unaugmented.
     """
 
-    def __init__(self, data_dict, transform=None, normaliser=2 ** 8 - 1, is_valid=False, is_inference=False, crop_size=None):
+    def __init__(self, data_dict, normaliser=2 ** 8 - 1, is_valid=False, is_inference=False, crop_size=None):
         """Initialisation for the Dataset object
 
         :param data_dict: dictionary of dictionaries containing images
-        :param transform: PyTorch image transformations to apply to the images
         :param crop_size: if set, training images are randomly cropped to this
             square size (the same crop is applied to input and target). Needed
             for a batch size greater than one, since FiveK images vary in size
@@ -51,7 +50,6 @@ class Dataset(torch.utils.data.Dataset):
         :rtype: N/A
 
         """
-        self.transform = transform
         self.data_dict = data_dict
         self.normaliser = normaliser
         self.is_valid = is_valid

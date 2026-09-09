@@ -10,7 +10,6 @@ import os
 
 import matplotlib.pyplot as plt
 import torch
-import torchvision.transforms as transforms
 
 import metric
 import model
@@ -45,9 +44,7 @@ def run_inference(checkpoint_filepath, inference_img_dirpath,
     have_targets = all(entry.get('output_img') is not None
                        for entry in data_dict.values())
 
-    dataset = Dataset(data_dict=data_dict,
-                      transform=transforms.Compose([transforms.ToTensor()]),
-                      normaliser=1, is_inference=True)
+    dataset = Dataset(data_dict=data_dict, normaliser=1, is_inference=True)
     data_loader = torch.utils.data.DataLoader(dataset, batch_size=1,
                                               shuffle=False, num_workers=6)
 

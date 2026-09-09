@@ -197,3 +197,31 @@ def test_greyscale_images_load_as_three_channels():
         Image.open(src).convert('L').save(grey)
         img = ImageProcessing.load_image(grey, normaliser=1)
         assert img.ndim == 3 and img.shape[2] == 3, img.shape
+
+
+def test_checkpoint_filepath_initialises_training(tmp_path):
+    """--checkpoint_filepath must fine-tune, not silently train from scratch.
+
+    The flag was read only on the inference path, so a run that passed it while
+    training produced exactly the from-scratch loss and looked normal.
+    """
+    lists = {}
+    for name, source in (('tr', 'images_train.txt'), ('va', 'images_valid.txt'),
+                         ('te', 'images_test.txt')):
+        ids = open(os.path.join(REPO, 'adobe5k_dpe', source)).read().split()[:2]
+        path = tmp_path / (name + '.txt')
+        path.write_text('\n'.join(ids) + '\n')
+        lists[name] = str(path)
+
+    ckpt = glob.glob(os.path.join(REPO, 'pretrained_models', 'adobe_dpe', '*.pt'))[0]
+    result = subprocess.run(
+        [sys.executable, os.path.join(REPO, 'main.py'), '--num_epoch=1',
+         '--valid_every=99',
+         '--training_img_dirpath=' + os.path.join(REPO, 'adobe5k_dpe_data') + os.sep,
+         '--train_img_list_path=' + lists['tr'],
+         '--valid_img_list_path=' + lists['va'],
+         '--test_img_list_path=' + lists['te'],
+         '--checkpoint_filepath=' + ckpt, '--seed=42'],
+        cwd=tmp_path, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr[-2000:]
+    assert 'Initialised the network from' in result.stderr, result.stderr[-2000:]
