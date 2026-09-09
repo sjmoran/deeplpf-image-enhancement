@@ -72,3 +72,16 @@ def test_inference_needs_no_training_paths():
     for flag in ('--training_img_dirpath', '--train_img_list_path',
                  '--valid_img_list_path'):
         assert flag in result.stderr, result.stderr[-2000:]
+
+
+def test_help_and_bad_flags_leave_no_directories(tmp_path):
+    """Neither --help nor a rejected command line may create anything on disk.
+
+    The log directory and the TensorBoard writer were created before argparse
+    ran, so every --help and every typo left an empty ``log_*`` and a ``runs/``
+    behind in the working directory.
+    """
+    for argv in (['--help'], ['--no_such_flag']):
+        subprocess.run([sys.executable, os.path.join(REPO, 'main.py')] + argv,
+                       cwd=tmp_path, capture_output=True, text=True)
+    assert list(tmp_path.iterdir()) == []

@@ -54,7 +54,11 @@ def main():
     reported and saved individually.
     """
 
-    writer = SummaryWriter()
+    # Parse before creating anything on disk: this ran first, so every --help
+    # and every rejected command line left an empty log_* directory and a
+    # TensorBoard runs/ directory behind in the working directory.
+    parser = cli.build_parser()
+    args = parser.parse_args()
 
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     log_dirpath = "./log_" + timestamp
@@ -65,8 +69,7 @@ def main():
     logging.basicConfig(
         level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s', handlers=handlers)
 
-    parser = cli.build_parser()
-    args = parser.parse_args()
+    writer = SummaryWriter()
 
     # The three training paths are required for training and meaningless for
     # inference, so they are checked here rather than by argparse: marking them

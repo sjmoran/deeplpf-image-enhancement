@@ -183,10 +183,13 @@ def run_training(args, device, log_dirpath, writer):
 
             net.train()
 
-    '''
-    Run the network over the testing dataset split
-    '''
-    testing_evaluator.evaluate(net, epoch=0)
+    # A final pass over the test split, unless the last epoch was already an
+    # evaluation epoch, in which case this would score the same weights twice.
+    # It is labelled with the epoch it actually ran at: passing epoch=0 wrote
+    # the finished model's per-image scores into test_per_image.csv under epoch
+    # 1, where anyone reading that file takes them for the first epoch's.
+    if num_epoch % valid_every != 0:
+        testing_evaluator.evaluate(net, epoch=num_epoch - 1)
 
     snapshot_prefix = os.path.join(log_dirpath, 'deep_lpf')
     snapshot_path = snapshot_prefix + "_" + str(num_epoch)
