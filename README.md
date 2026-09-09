@@ -37,17 +37,29 @@ Official PyTorch implementation of the CVPR 2020 paper **DeepLPF: Deep Local Par
 ```bash
 git clone https://github.com/sjmoran/deeplpf-image-enhancement.git
 cd deeplpf-image-enhancement
-pip install -r requirements.txt
+pip install -e .
 
-# Enhance the bundled example images with the pre-trained Adobe-DPE model.
-# Results (with PSNR/SSIM in the filenames) appear in a timestamped log_* directory.
+# Enhance a photograph, or a directory of them, with the bundled Adobe-DPE model.
+deeplpf enhance photo.jpg
+deeplpf enhance ~/photos --out ~/enhanced
+```
+
+Enhanced images are written to `enhanced/` as PNGs. PNG, JPEG, TIFF, BMP and
+WebP are read, greyscale and RGBA included. The device is chosen for you - a
+CUDA GPU, Apple Silicon (MPS), or CPU - and `--device` overrides it.
+
+To score a model against retouched targets rather than enhance loose files,
+`main.py` takes a dataset directory and a list of image ids:
+
+```bash
 python3 main.py \
   --inference_img_list_path=./adobe5k_dpe/images_inference.txt \
   --inference_img_dirpath=./adobe5k_dpe/ \
   --checkpoint_filepath=./pretrained_models/adobe_dpe/deeplpf_validpsnr_23.378_validloss_0.033_testpsnr_23.904_testloss_0.031_epoch_424_model.pt
 ```
 
-The code picks the best available device automatically: a CUDA GPU, Apple Silicon (MPS), or CPU. No configuration is needed.
+That prints per-image PSNR/SSIM and writes the enhanced images to a timestamped
+`log_*` directory.
 
 ## Results
 
