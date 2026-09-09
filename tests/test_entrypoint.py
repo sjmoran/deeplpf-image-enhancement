@@ -44,3 +44,31 @@ def test_main_help_lists_the_run_shaping_flags():
     for flag in ('--fixes', '--seed', '--cuda_graphs', '--valid_every',
                  '--msssim_weight', '--gate_weight', '--num_epoch'):
         assert flag in result.stdout, '%s missing from --help' % flag
+
+
+def test_inference_needs_no_training_paths():
+    """The README's Quick start command must run without the training flags.
+
+    ``--training_img_dirpath``, ``--train_img_list_path`` and
+    ``--valid_img_list_path`` were ``required=True``, so argparse rejected the
+    documented inference command before it reached the inference branch.
+    """
+    result = subprocess.run(
+        [sys.executable, 'main.py',
+         '--inference_img_list_path=./adobe5k_dpe/images_inference.txt',
+         '--inference_img_dirpath=./adobe5k_dpe/',
+         '--checkpoint_filepath=./pretrained_models/adobe_dpe/'
+         'deeplpf_validpsnr_23.378_validloss_0.033_testpsnr_23.904_'
+         'testloss_0.031_epoch_424_model.pt',
+         '--help'],
+        cwd=REPO, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr[-2000:]
+
+    # Training still refuses to start without them, naming every one it needs.
+    result = subprocess.run(
+        [sys.executable, 'main.py', '--num_epoch=1'],
+        cwd=REPO, capture_output=True, text=True)
+    assert result.returncode != 0
+    for flag in ('--training_img_dirpath', '--train_img_list_path',
+                 '--valid_img_list_path'):
+        assert flag in result.stderr, result.stderr[-2000:]
