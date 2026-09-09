@@ -9,7 +9,7 @@
 
 [[Paper]](https://arxiv.org/abs/2003.13985) [[Poster]](https://github.com/sjmoran/sjmoran.github.io/blob/main/pdfs/DeepLPF_CVPR20_poster.pdf) [[Video]](https://www.youtube.com/watch?v=Sxach3FM6FY) [[Supplementary]](https://github.com/sjmoran/sjmoran.github.io/blob/7775d1fc39d14baeb6935f6c750f923e1251f491/pdfs/DeepLPF_supplementary.pdf)
 
-Official PyTorch implementation of the CVPR 2020 paper **DeepLPF: Deep Local Parametric Filters for Image Enhancement**. Instead of predicting output pixels directly, DeepLPF regresses the parameters of a small set of spatially localised image filters (cubic, graduated and elliptical) and applies them, giving an interpretable retouching model. The bundled pre-trained model scores **23.90 dB PSNR / 0.911 SSIM**, and this repository states the protocol behind every number it reports — see [Which number, which protocol](#which-number-which-protocol), which is the axis most FiveK comparisons get wrong.
+Official PyTorch implementation of the CVPR 2020 paper **DeepLPF: Deep Local Parametric Filters for Image Enhancement**. Instead of predicting output pixels directly, DeepLPF regresses the parameters of a small set of spatially localised image filters (cubic, graduated and elliptical) and applies them, giving an interpretable retouching model. The bundled pre-trained model scores **23.90 dB PSNR / 0.911 SSIM**. Every number in this repository names the protocol it was measured under; see [Which number, which protocol](#which-number-which-protocol), the axis most FiveK comparisons go wrong on.
 
 <p align="center">
 <img src="./images/teaser.png" width="80%"/>
@@ -249,8 +249,8 @@ longer schedules still improving; both are tabulated in
 than the released checkpoint's 23.90, which belongs to the reconstructed split.
 See [`adobe5k_dpe/SPLIT_PROVENANCE.md`](./adobe5k_dpe/SPLIT_PROVENANCE.md).
 The fastest way to confirm your pipeline before committing to a full training
-run is the [Quick start](#quick-start) inference command — it runs the released
-checkpoint over the bundled examples and prints per-image PSNR/SSIM.
+run is the [Quick start](#quick-start) inference command, which runs the
+released checkpoint over the bundled examples and prints per-image PSNR/SSIM.
 
 ## Auditing your own model
 
