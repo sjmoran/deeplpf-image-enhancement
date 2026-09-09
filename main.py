@@ -75,6 +75,11 @@ def main():
     # inference, so they are checked here rather than by argparse: marking them
     # required=True made the README's inference command fail on a missing
     # --train_img_list_path.
+    if args.valid_every < 1:
+        parser.error('--valid_every must be at least 1; it is the number of '
+                     'epochs between evaluations, and 0 divided the epoch '
+                     'counter by zero once the first epoch finished')
+
     inference_run = (args.checkpoint_filepath is not None
                      and args.inference_img_dirpath is not None)
     if not inference_run:

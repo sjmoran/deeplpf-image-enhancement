@@ -11,6 +11,8 @@ rebound ``torch``, once from a malformed ``parser.add_argument`` block.
 runs. Compiling the file and importing it are what actually catch it.
 """
 
+import pytest
+
 import py_compile
 import shutil
 import subprocess
@@ -199,6 +201,8 @@ def test_greyscale_images_load_as_three_channels():
         assert img.ndim == 3 and img.shape[2] == 3, img.shape
 
 
+@pytest.mark.skipif(not os.path.isdir(os.path.join(REPO, 'adobe5k_dpe_data')),
+                    reason='needs the FiveK pairs, which are not in the repository')
 def test_checkpoint_filepath_initialises_training(tmp_path):
     """--checkpoint_filepath must fine-tune, not silently train from scratch.
 
@@ -225,3 +229,35 @@ def test_checkpoint_filepath_initialises_training(tmp_path):
         cwd=tmp_path, capture_output=True, text=True)
     assert result.returncode == 0, result.stderr[-2000:]
     assert 'Initialised the network from' in result.stderr, result.stderr[-2000:]
+
+
+def test_valid_every_zero_is_rejected(tmp_path):
+    """--valid_every=0 divided the epoch counter by zero after epoch one."""
+    result = subprocess.run(
+        [sys.executable, os.path.join(REPO, 'main.py'), '--valid_every=0',
+         '--training_img_dirpath=x', '--train_img_list_path=x',
+         '--valid_img_list_path=x'],
+        cwd=tmp_path, capture_output=True, text=True)
+    assert result.returncode != 0
+    assert '--valid_every must be at least 1' in result.stderr
+
+
+def test_requirements_lists_only_what_is_imported():
+    """A dependency nobody imports is one more thing to install and break."""
+    sources = []
+    for pattern in ('*.py', 'tests/*.py', 'data_prep/*.py', 'tools/*.py',
+                    'modelaudit/*.py'):
+        for path in glob.glob(os.path.join(REPO, pattern)):
+            sources.append(open(path).read())
+    blob = '\n'.join(sources)
+
+    # Distribution name -> the module it provides, where they differ.
+    provides = {'scikit-image': 'skimage', 'pillow': 'PIL',
+                'tensorboard': 'tensorboard', 'torchvision': 'torchvision'}
+    for line in open(os.path.join(REPO, 'requirements.txt')):
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        dist = line.split('==')[0].split('>=')[0]
+        module = provides.get(dist, dist)
+        assert module in blob, '%s is in requirements.txt but never imported' % dist

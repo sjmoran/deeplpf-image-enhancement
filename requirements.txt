@@ -1,9 +1,12 @@
+# The versions CI installs and the suite is run against. torch and
+# torchvision are pinned to a matching pair; on a machine that already
+# has a CUDA or ROCm build of torch, install the rest of this file and
+# leave torch alone - pip will otherwise replace that build with the
+# generic wheel and the GPU goes with it.
 numpy==2.4.6
-scipy==1.17.1
 torch==2.13.0
 scikit-image==0.26.0
 torchvision==0.28.0
 matplotlib==3.11.1
-imageio==2.37.4
 pillow==12.3.0
 tensorboard==2.21.0
