@@ -1,0 +1,10 @@
+{
+  "fixes": "blend,ellipse,fusion,ste",
+  "msssim_weight": 0.001,
+  "split": "reconstructed (adobe5k_dpe/guessed_split_superseded)",
+  "epochs": 1000,
+  "seed": 42,
+  "valid_psnr": 23.038,
+  "test_psnr": 24.18,
+  "test_ssim": 0.917
+}

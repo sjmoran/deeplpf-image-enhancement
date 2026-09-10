@@ -65,9 +65,10 @@ That prints per-image PSNR/SSIM and writes the enhanced images to a timestamped
 
 | Model | Split | PSNR | SSIM |
 |---|---|---|---|
+| **`adobe_dpe_v2_reconstructed`, 1000 epochs** | reconstructed | **24.18 dB** | **0.917** |
 | bundled `adobe_dpe`, epoch 424 | reconstructed | 23.90 dB | 0.911 |
-| retrained, `--fixes=none` | recovered DPE | 23.38 dB | 0.897 |
-| retrained, `--fixes=blend,ellipse,fusion,ste` | recovered DPE | 23.76 dB | 0.901 |
+| retrained, `--fixes=none`, 500 epochs | recovered DPE | 23.38 dB | 0.897 |
+| retrained, `--fixes=blend,ellipse,fusion,ste`, 500 epochs | recovered DPE | 23.76 dB | 0.901 |
 | published DeepLPF (NamedCurves Tab. 1) | DPE | 23.93 dB | 0.903 |
 
 **Match the split column before comparing any two rows.** The bundled
@@ -154,6 +155,7 @@ Because the network predicts a small set of human-meaningful filter parameters r
 Checkpoints are in `pretrained_models/`:
 
 - **Adobe-DPE** (`pretrained_models/adobe_dpe/`): trained on Adobe5K with the DeepPhotoEnhancer pre-processing. The best-validation checkpoint (epoch 424) reaches 23.90 dB PSNR / 0.911 SSIM, measured on the best-guess split this repository shipped before the original DPE lists were recovered — see [`adobe5k_dpe/SPLIT_PROVENANCE.md`](./adobe5k_dpe/SPLIT_PROVENANCE.md). It is the checkpoint used in the [Quick start](#quick-start).
+- **Adobe-DPE v2** (`pretrained_models/adobe_dpe_v2_reconstructed/`): trained here for 1000 epochs with `--fixes=blend,ellipse,fusion,ste` on the reconstructed split, reaching 24.18 dB / 0.917 on that split's test set - the best model in this repository on the protocol it shares with the original checkpoint. It ships with a `.fixes.json` sidecar recording the flags it was trained with, which `deeplpf enhance` and `main.py` read automatically; without them the same weights load cleanly and compute a different image.
 - **Adobe-UPE** (`pretrained_models/adobe_upe/`): trained on Adobe5K using the splits and pre-processing from the DeepUPE paper. Contributed by Yucheng Lu (yucheng.l@outlook.com) and applied in [this paper](https://arxiv.org/abs/2106.14844).
 
 ## Training

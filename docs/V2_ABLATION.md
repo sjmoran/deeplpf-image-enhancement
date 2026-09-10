@@ -109,8 +109,24 @@ fourth on test - so only the first row is a result. The ordering also changed
 at every 25-epoch evaluation up to epoch 125, which is the reason not to read a
 150-epoch sweep as a ranking of anything but the extremes.
 
-Two 1000-epoch runs test whether the lead survives: `2e-1` against `1e-3` as
-the published control, same fixes, same seed, same split.
+Two 1000-epoch runs tested whether the lead survives, `2e-1` against `1e-3` as
+the published control, same fixes, same seed, same split:
+
+| `--msssim_weight` | best valid PSNR | final test PSNR | test SSIM |
+|---|---|---|---|
+| 1e-3 (published) | 23.075 | **24.180** | 0.917 |
+| 2e-1 | 23.140 | 24.049 | 0.917 |
+
+It did not. The arm that led the sweep by 0.18 dB finished 0.13 dB behind on
+test, while keeping a 0.065 dB edge on validation - the two metrics disagree,
+which is the same reading as the sweep itself: at 1e-3 the structural term
+contributes about 0.07% of the L1 gradient, and raising it to 2e-1 changes
+nothing that survives 1000 epochs. The 150-epoch ranking was sampling noise.
+
+The `1e-3` run is the checkpoint shipped as
+`pretrained_models/adobe_dpe_v2_reconstructed/`. Its 24.18 dB is on the
+reconstructed split, so it is comparable with the released checkpoint's 23.90
+and not with any DPE-protocol number.
 
 ## Cost and shutdown
 

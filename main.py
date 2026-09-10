@@ -60,6 +60,14 @@ def main():
     parser = cli.build_parser()
     args = parser.parse_args()
 
+    # A checkpoint shipped with a .fixes.json sidecar carries the spec it was
+    # trained with; without it an unfixed model would load those weights
+    # cleanly and compute a different forward pass.
+    if args.fixes == 'none' and args.checkpoint_filepath:
+        recorded = fixes.for_checkpoint(args.checkpoint_filepath)
+        if recorded:
+            args.fixes = recorded
+
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     log_dirpath = "./log_" + timestamp
     os.mkdir(log_dirpath)

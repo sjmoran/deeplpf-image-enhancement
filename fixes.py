@@ -59,6 +59,9 @@ Set the active fixes once at startup with :func:`configure`; read them with
 :func:`enabled`.
 """
 
+import json
+import os
+
 ALL_FIXES = ('wiring', 'ellipse', 'ste', 'msssim', 'fusion', 'blend')
 
 #: Opt-in capabilities, excluded from ``'all'`` (see the module docstring).
@@ -172,6 +175,27 @@ def configure(spec, msssim_weight=None, gate_weight=None, colour_knots=None):
 
     _active = frozenset(names)
     return tuple(sorted(_active))
+
+
+def for_checkpoint(checkpoint_filepath):
+    """The fix spec a checkpoint was trained with, from its sidecar file.
+
+    None of the fixes adds or removes a parameter, so a checkpoint trained with
+    them loads without complaint into a model configured with ``none`` and then
+    computes a different forward pass - silently, and wrongly. A checkpoint may
+    therefore be shipped with a ``<name>.fixes.json`` beside it recording what
+    it was trained with.
+
+    :param checkpoint_filepath: path to a ``.pt`` checkpoint
+    :returns: the fix spec, or None if there is no sidecar
+    :rtype: str or None
+
+    """
+    sidecar = os.path.splitext(checkpoint_filepath)[0] + '.fixes.json'
+    if not os.path.isfile(sidecar):
+        return None
+    with open(sidecar) as handle:
+        return json.load(handle).get('fixes')
 
 
 def enabled(name):

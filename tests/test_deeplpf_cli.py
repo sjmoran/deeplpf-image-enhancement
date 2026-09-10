@@ -7,6 +7,7 @@ on someone else's photographs: a directory argument, a single file, a mixture
 of formats, and a file it cannot use failing without abandoning the rest.
 """
 
+import glob
 import os
 
 import numpy as np
@@ -85,3 +86,31 @@ def test_no_images_found_is_an_error(tmp_path, capsys):
 
     assert status == 2
     assert 'no images found' in capsys.readouterr().err
+
+
+@needs_weights
+def test_checkpoint_sidecar_selects_the_fixes(tmp_path, capsys):
+    """A checkpoint's fixes must come from its sidecar, not from a default.
+
+    No fix adds or removes a parameter, so weights trained with them load into
+    an unfixed model without a missing or unexpected key and then compute a
+    different image - a silent wrong answer, measured at 0.30 in [0, 1] on the
+    v2 checkpoint.
+    """
+    import fixes
+
+    repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    v2 = glob.glob(os.path.join(repo, 'pretrained_models',
+                                'adobe_dpe_v2_reconstructed', '*.pt'))
+    if not v2:
+        pytest.skip('the v2 checkpoint is not in this checkout')
+
+    assert fixes.for_checkpoint(v2[0]) == 'blend,ellipse,fusion,ste'
+
+    source = tmp_path / 'photo.png'
+    Image.open(EXAMPLE).convert('RGB').save(source)
+    deeplpf_cli.main(['enhance', str(source), '--out', str(tmp_path / 'out'),
+                      '--device', 'cpu', '--checkpoint', v2[0]])
+
+    assert 'trained with --fixes=blend,ellipse,fusion,ste' in capsys.readouterr().out
+    assert fixes.active() == ('blend', 'ellipse', 'fusion', 'ste')

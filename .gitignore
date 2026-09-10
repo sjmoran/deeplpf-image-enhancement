@@ -10,3 +10,5 @@ __pycache__/
 
 # Local training data / exports
 adobe5k_dpe_data/
+build/
+*.egg-info/

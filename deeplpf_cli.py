@@ -200,9 +200,10 @@ def build_parser():
                          help="'auto' (default), 'cpu', 'cuda', 'mps'")
     enhance.add_argument('--suffix', default='_enhanced',
                          help="appended to each output filename (default: '_enhanced')")
-    enhance.add_argument('--fixes', default='none',
-                         help='v2 fixes the checkpoint was trained with; see '
-                              'the fixes module. Default none, the published model.')
+    enhance.add_argument('--fixes', default=None,
+                         help='v2 fixes the checkpoint was trained with. Read '
+                              'from the checkpoint\'s .fixes.json sidecar when '
+                              'there is one, otherwise none, the published model.')
     enhance.set_defaults(func=run_enhance)
 
     return parser
@@ -217,9 +218,18 @@ def main(argv=None):
 
     """
     args = build_parser().parse_args(argv)
-    # The checkpoint's architecture has to match the flags it was trained with,
-    # so this is set before the network is built.
-    fixes.configure(args.fixes)
+
+    # Every fix changes the forward pass without changing a single parameter,
+    # so a checkpoint trained with them loads into an unfixed model without a
+    # murmur and then computes something else. Take the spec from the
+    # checkpoint's sidecar unless the caller named one.
+    checkpoint = getattr(args, 'checkpoint', None) or default_checkpoint()
+    spec = args.fixes
+    if spec is None and checkpoint is not None:
+        spec = fixes.for_checkpoint(checkpoint)
+        if spec:
+            print('checkpoint was trained with --fixes=%s' % spec)
+    fixes.configure(spec or 'none')
     return args.func(args)
 
 
