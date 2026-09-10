@@ -98,7 +98,7 @@ def main():
             parser.error('training needs %s; for inference pass both '
                          '--checkpoint_filepath and --inference_img_dirpath'
                          % ', '.join('--' + name for name in missing))
-    active_fixes = fixes.configure(args.fixes, args.msssim_weight, args.gate_weight,
+    active_fixes = fixes.configure(args.fixes, args.gate_weight,
                                    args.colour_knots)
 
     if args.seed is not None:

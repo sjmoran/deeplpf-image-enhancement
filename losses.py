@@ -7,7 +7,7 @@
 """The training loss of Sec. 3.4, Eq. 8, and the MS-SSIM it is built on.
 
 Split out of ``model.py`` unchanged. ``fixes.msssim_weight()`` supplies the
-weight on the structural term; see :mod:`fixes` for why that weight matters.
+published weight on the structural term.
 """
 from math import exp
 
@@ -243,8 +243,7 @@ class DeepLPFLoss(nn.Module):
         # w_msssim = 1e-3, at which the structural term contributes about 0.07%
         # of the L1 term's gradient - measured in
         # tests/test_loss_terms_contribute.py - so what trains the model is L1
-        # in Lab space. fixes.msssim_weight() returns that published value
-        # unless --msssim_weight overrides it.
+        # in Lab space. fixes.msssim_weight() returns that published value.
         deeplpf_loss = l1_loss_value + fixes.msssim_weight()*ssim_loss_value
         return deeplpf_loss
 

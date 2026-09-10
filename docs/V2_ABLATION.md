@@ -87,46 +87,20 @@ the larger term. The three gate weights land within 0.05 dB of each other, so
 the gate weight is doing nothing measurable at n=498 either. Separating these
 arms needs several seeds each, not a larger test set.
 
-### The MS-SSIM weight
+### The MS-SSIM weight stays at the paper's value
 
 Eq. 8's `w_msssim = 1e-3` makes the structural term contribute about 0.07% of
-the L1 gradient, so the published model is trained by L1 in Lab space alone.
-`--msssim_weight` exposes the weight. Five arms, 150 epochs each, all with
-`--fixes=blend,ellipse,fusion,ste,msssim` and seed 42, on the best-guess split:
+the L1 gradient, so the model is trained by L1 in Lab space alone. Raising it
+was tested and abandoned: five arms at 1e-3 to 1.0 for 150 epochs, then the two
+most promising for 1000 epochs. The arm that led the short sweep by 0.18 dB
+finished 0.13 dB behind on test, with validation and test disagreeing about the
+ordering throughout. The weight is now fixed at the published value and there is
+no flag to change it.
 
-| `--msssim_weight` | best valid PSNR | test PSNR | test SSIM |
-|---|---|---|---|
-| 2e-1 | **22.983** | 24.053 | 0.911 |
-| 1e-2 | 22.803 | 23.750 | 0.903 |
-| 1.0 | 22.796 | 23.675 | 0.909 |
-| 5e-2 | 22.777 | 23.833 | 0.907 |
-| 1e-3 (published) | 22.734 | 23.809 | 0.907 |
-
-2e-1 leads on both splits and by the largest margin in the sweep, +0.18 dB
-valid over the next arm. The remaining four sit inside a 0.07 dB band whose
-validation and test orderings disagree - 1e-2 is second on validation and
-fourth on test - so only the first row is a result. The ordering also changed
-at every 25-epoch evaluation up to epoch 125, which is the reason not to read a
-150-epoch sweep as a ranking of anything but the extremes.
-
-Two 1000-epoch runs tested whether the lead survives, `2e-1` against `1e-3` as
-the published control, same fixes, same seed, same split:
-
-| `--msssim_weight` | best valid PSNR | final test PSNR | test SSIM |
-|---|---|---|---|
-| 1e-3 (published) | 23.075 | **24.180** | 0.917 |
-| 2e-1 | 23.140 | 24.049 | 0.917 |
-
-It did not. The arm that led the sweep by 0.18 dB finished 0.13 dB behind on
-test, while keeping a 0.065 dB edge on validation - the two metrics disagree,
-which is the same reading as the sweep itself: at 1e-3 the structural term
-contributes about 0.07% of the L1 gradient, and raising it to 2e-1 changes
-nothing that survives 1000 epochs. The 150-epoch ranking was sampling noise.
-
-The `1e-3` run is the checkpoint shipped as
-`pretrained_models/adobe_dpe_v2_reconstructed/`. Its 24.18 dB is on the
-reconstructed split, so it is comparable with the released checkpoint's 23.90
-and not with any DPE-protocol number.
+The 1000-epoch run at that published weight is the checkpoint shipped as
+`pretrained_models/adobe_dpe_v2_reconstructed/`: 24.18 dB test PSNR on the
+reconstructed split, against 23.90 for the checkpoint released in 2020 on that
+same split, and not comparable with any DPE-protocol number.
 
 ## Cost and shutdown
 

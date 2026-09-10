@@ -45,7 +45,7 @@ def test_main_help_lists_the_run_shaping_flags():
     assert result.returncode == 0, result.stderr[-2000:]
 
     for flag in ('--fixes', '--seed', '--cuda_graphs', '--valid_every',
-                 '--msssim_weight', '--gate_weight', '--num_epoch'):
+                 '--gate_weight', '--num_epoch'):
         assert flag in result.stdout, '%s missing from --help' % flag
 
 

@@ -79,7 +79,6 @@ COLOUR_KNOTS = 16
 PUBLISHED_MSSSIM_WEIGHT = 1e-3
 
 _active = frozenset()
-_msssim_weight = PUBLISHED_MSSSIM_WEIGHT
 _gate_weight = PUBLISHED_GATE_WEIGHT
 _colour_knots = COLOUR_KNOTS
 
@@ -114,30 +113,27 @@ def gate_weight():
 
 
 def msssim_weight():
-    """Weight on the MS-SSIM term of Eq. 8.
+    """Weight on the MS-SSIM term of Eq. 8, the published 1e-3.
 
-    Defaults to the published 1e-3. At that value the term contributes roughly
-    0.07% of the L1 term's gradient, so it cannot influence training - not
-    because the term is degenerate (unweighted it is within a factor of 1.5 of
-    L1) but because of the weight alone. Raising it is the only way to find out
-    whether the structural term does anything when it is not decorative.
+    At this value the structural term contributes about 0.07% of the L1 term's
+    gradient, so what trains the model is L1 in Lab space. Raising it was tried
+    (1e-2 to 1.0, 150 epochs, and 2e-1 against 1e-3 for 1000) and changed
+    nothing that survived, so the weight is fixed at the paper's value.
 
-    :returns: the active weight
+    :returns: the published weight
     :rtype: float
 
     """
-    return _msssim_weight
+    return PUBLISHED_MSSSIM_WEIGHT
 
 
-def configure(spec, msssim_weight=None, gate_weight=None, colour_knots=None):
+def configure(spec, gate_weight=None, colour_knots=None):
     """Set the active fixes from a command-line spec.
 
     :param spec: ``'none'``, ``'all'``, or a comma-separated subset of
                  :data:`ALL_FIXES` and :data:`FEATURES` (e.g. ``'wiring,ste'``).
                  ``'all'`` means every fix in :data:`ALL_FIXES`; features are
                  never implied and must be named.
-    :param msssim_weight: override for the Eq. 8 MS-SSIM weight; ``None`` keeps
-                          the published :data:`PUBLISHED_MSSSIM_WEIGHT`
     :param gate_weight: override for the ``gates`` L1 penalty weight; ``None``
                         keeps :data:`PUBLISHED_GATE_WEIGHT`
     :returns: the active fixes, sorted
@@ -145,10 +141,8 @@ def configure(spec, msssim_weight=None, gate_weight=None, colour_knots=None):
     :raises ValueError: if a name is not one of :data:`ALL_FIXES`
 
     """
-    global _active, _msssim_weight, _gate_weight, _colour_knots
+    global _active, _gate_weight, _colour_knots
 
-    _msssim_weight = (PUBLISHED_MSSSIM_WEIGHT if msssim_weight is None
-                      else float(msssim_weight))
     _gate_weight = (PUBLISHED_GATE_WEIGHT if gate_weight is None
                     else float(gate_weight))
     _colour_knots = (COLOUR_KNOTS if colour_knots is None else int(colour_knots))

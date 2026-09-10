@@ -55,13 +55,6 @@ def build_parser():
         help="Plain text file containing the names of the test images")
 
     parser.add_argument(
-        "--msssim_weight", type=float, required=False, default=None,
-        help="Weight on the MS-SSIM term of Eq. 8. Defaults to the published "
-             "1e-3, at which the term contributes ~0.07%% of the L1 gradient "
-             "and cannot affect training. Raise it to test whether the "
-             "structural term matters when it is not decorative.")
-
-    parser.add_argument(
         "--gate_weight", type=float, required=False, default=None,
         help="Weight on the L1 gate penalty of the `gates` feature, which is "
              "what makes the number of active filter instances learned rather "
