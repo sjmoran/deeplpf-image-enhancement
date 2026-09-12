@@ -1,0 +1,85 @@
+#!/bin/bash
+# One ablation arm, start to finish, unattended. Runs as root at boot.
+#
+# Placeholders __ARM_NAME__, __FIX_SPEC__, __EPOCHS__, __HARD_CAP__,
+# __EXTRA_ARGS__, __SPLIT_DIR__ (which split lists to copy in) and
+# __BUCKET__ are substituted by launch_ablation.sh.
+#
+# The instance is launched with instance-initiated-shutdown-behavior=terminate,
+# so every shutdown path here terminates the instance and stops the billing:
+#   - normal completion            -> shutdown at the end of this script
+#   - hang, crash, or lost session -> the hard-cap watchdog
+#   - staging failure              -> the EXIT trap
+# None of them depends on an operator session staying alive.
+
+exec > >(tee -a /var/log/arm.log) 2>&1
+set -u
+
+ARM_NAME="__ARM_NAME__"
+FIX_SPEC="__FIX_SPEC__"
+SEED=__SEED__
+# Extra flags for this arm (e.g. --gate_weight=1e-2); empty for most arms.
+EXTRA_ARGS="__EXTRA_ARGS__"
+EPOCHS=__EPOCHS__
+HARD_CAP_HOURS=__HARD_CAP__
+BUCKET="__BUCKET__"
+PY=/opt/pytorch/bin/python
+
+echo "=== arm $ARM_NAME (--fixes=$FIX_SPEC), seed $SEED, $EPOCHS epochs, cap ${HARD_CAP_HOURS}h ==="
+date -u
+
+shutdown -h +$((HARD_CAP_HOURS * 60)) "deeplpf arm $ARM_NAME hard cap" &
+
+cleanup () {
+  echo "=== cleanup (exit $?) ==="
+  aws s3 sync "$RUN/out" "$BUCKET/results/$ARM_NAME/" --only-show-errors || true
+  aws s3 cp /var/log/arm.log "$BUCKET/results/$ARM_NAME/arm.log" || true
+  shutdown -h now "deeplpf arm $ARM_NAME done"
+}
+trap cleanup EXIT
+
+WORK=/opt/dlami/nvme
+[ -d "$WORK" ] && [ -w "$WORK" ] || WORK=/home/ubuntu
+RUN=$WORK/deeplpf
+mkdir -p "$RUN/out" && cd "$RUN" || exit 1
+
+echo "=== staging ==="
+aws s3 cp $BUCKET/__CODE_TGZ__ . --only-show-errors || exit 1
+aws s3 cp $BUCKET/data.tgz . --only-show-errors || exit 1
+mkdir -p repo && tar xzf __CODE_TGZ__ -C repo
+tar xzf data.tgz
+# data.tgz carries a copy of adobe5k_dpe/ from whenever it was built, so the
+# split lists in it can be stale. The repository is the source of truth.
+cp -f repo/__SPLIT_DIR__/images_*.txt adobe5k_dpe/
+echo "split in use: train $(wc -l < adobe5k_dpe/images_train.txt), valid $(wc -l < adobe5k_dpe/images_valid.txt), test $(wc -l < adobe5k_dpe/images_test.txt)"
+echo "staged $(ls adobe5k_dpe_data/input | wc -l) inputs, $(ls adobe5k_dpe_data/output | wc -l) targets"
+
+# Deliberately not `pip install -r requirements.txt`: its pinned torch would
+# replace the AMI's CUDA build with a generic wheel and lose the GPU.
+$PY -m pip install -q tensorboard scikit-image imageio matplotlib scipy 2>&1 | tail -1
+$PY -c "import torch; print('torch', torch.__version__, torch.cuda.get_device_name(0))"
+
+# Periodic sync, so an interruption loses minutes rather than the run.
+( while true; do
+    sleep 600
+    aws s3 sync "$RUN/out" "$BUCKET/results/$ARM_NAME/" --only-show-errors || true
+    aws s3 cp /var/log/arm.log "$BUCKET/results/$ARM_NAME/arm.log" || true
+  done ) &
+
+echo "=== training ==="
+cd "$RUN/out" || exit 1
+$PY -u "$RUN/repo/main.py" \
+    --num_epoch=$EPOCHS \
+    --training_img_dirpath="$RUN/adobe5k_dpe_data/" \
+    --train_img_list_path="$RUN/adobe5k_dpe/images_train.txt" \
+    --valid_img_list_path="$RUN/adobe5k_dpe/images_valid.txt" \
+    --test_img_list_path="$RUN/adobe5k_dpe/images_test.txt" \
+    --batch_size=1 \
+    --seed=$SEED \
+    --cuda_graphs \
+    --valid_every=25 \
+    $EXTRA_ARGS \
+    > "$RUN/out/train.log" 2>&1
+
+echo "=== training exited $? at $(date -u) ==="
+# The EXIT trap syncs and terminates.

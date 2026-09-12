@@ -1,0 +1,22 @@
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Local training data / exports
+adobe5k_dpe_data/
+build/
+*.egg-info/
+
+# Training output
+log_*/
+runs/
+
+# Local scratch
+old/
+.claude/

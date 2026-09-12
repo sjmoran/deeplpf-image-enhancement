@@ -1,0 +1,70 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deeplpf"
+version = "1.0.0"
+description = "DeepLPF: Deep Local Parametric Filters for Image Enhancement (CVPR 2020)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [
+    { name = "Sean Moran", email = "sean.j.moran@gmail.com" },
+    { name = "Pierre Marza" },
+    { name = "Steven McDonagh" },
+    { name = "Sarah Parisot" },
+    { name = "Gregory Slabaugh" },
+]
+keywords = ["image-enhancement", "computer-vision", "pytorch", "cvpr2020"]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Image Processing",
+]
+# Kept in step with requirements.txt, which pins the versions CI runs; these
+# are the floors the code actually needs.
+dependencies = [
+    "numpy>=2.0",
+    "torch>=2.6",
+    "torchvision>=0.21",
+    "scikit-image>=0.24",
+    "matplotlib>=3.8",
+    "pillow>=10.0",
+    "tensorboard>=2.16",
+]
+
+[project.urls]
+Homepage = "https://github.com/sjmoran/deeplpf-image-enhancement"
+Paper = "https://arxiv.org/abs/2003.13985"
+
+[project.scripts]
+deeplpf = "deeplpf_cli:main"
+
+[tool.setuptools]
+# The modules sit at the top level rather than under a package directory, which
+# is how the published code was laid out; listing them keeps that layout
+# installable without moving every file and breaking every checkpoint path.
+py-modules = [
+    "blocks",
+    "cli",
+    "cubic",
+    "data",
+    "deeplpf_cli",
+    "elliptical",
+    "filtercommon",
+    "filters",
+    "graduated",
+    "inference",
+    "losses",
+    "main",
+    "metric",
+    "model",
+    "train",
+    "trainstep",
+    "unet",
+    "util",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
