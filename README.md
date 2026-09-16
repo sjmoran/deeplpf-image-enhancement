@@ -6,6 +6,7 @@
 <sub>CVPR 2020 · Huawei Noah's Ark Lab</sub></p>
 
 [![CI](https://github.com/sjmoran/deeplpf-image-enhancement/actions/workflows/ci.yml/badge.svg)](https://github.com/sjmoran/deeplpf-image-enhancement/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/sjmoran/deeplpf-image-enhancement?color=blue)](https://github.com/sjmoran/deeplpf-image-enhancement/releases/latest)
 [![arXiv](https://img.shields.io/badge/arXiv-2003.13985-b31b1b.svg)](https://arxiv.org/abs/2003.13985)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.6+-ee4c2c.svg)](https://pytorch.org/)
