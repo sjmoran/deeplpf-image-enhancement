@@ -8,7 +8,7 @@ version = "1.0.0"
 description = "DeepLPF: Deep Local Parametric Filters for Image Enhancement (CVPR 2020)"
 readme = "README.md"
 requires-python = ">=3.11"
-license = "MIT"
+license = { text = "MIT" }
 authors = [
     { name = "Sean Moran", email = "sean.j.moran@gmail.com" },
     { name = "Pierre Marza" },
