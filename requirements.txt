@@ -8,5 +8,5 @@ torch==2.13.0
 scikit-image==0.26.0
 torchvision==0.28.0
 matplotlib==3.11.1
-pillow==12.3.0
+pillow==13.0.0
 tensorboard==2.21.0
